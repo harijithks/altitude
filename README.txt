@@ -1,0 +1,1 @@
+Paste your Firebase config into FBCFG in index.html, then deploy.
