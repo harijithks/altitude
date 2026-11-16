@@ -72,13 +72,23 @@ label.l{display:block;font-size:11px;font-weight:700;color:var(--mu);text-transf
 @media(min-width:900px){.fab{display:none}}
 .card{transition:box-shadow .2s,border-color .2s}.card:hover{box-shadow:0 6px 22px rgba(15,23,42,.08)}.btn:active,.fab:active{transform:scale(.97)}
 button:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.ad{border:1px solid var(--bd);background:var(--in);border-radius:12px;min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 2px;font-weight:700;color:var(--tx);overflow:hidden;cursor:pointer;font-size:14px}
+.ad small{font-size:10px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.ad.blank{visibility:hidden}.ad.off{opacity:.55;border-style:dashed;color:var(--mu)}.ad.fut{opacity:.35;cursor:not-allowed}.ad.tod{box-shadow:0 0 0 2px var(--ac)}
+.ad.P,.ad.H,.ad.A,.ad.L,.ad.HD,.ad.U{color:#fff;border-color:transparent}.ad.P{background:#10b981}.ad.H{background:#f59e0b}.ad.A{background:#ef4444}.ad.L{background:#3b82f6}.ad.HD{background:#8b5cf6}.ad.U{background:#64748b}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.cal .wd{font-size:11px;font-weight:700;color:var(--mu);text-align:center;padding:4px 0}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--mu)}.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.yr{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.yr button{border:1px solid var(--bd);background:var(--in);border-radius:10px;padding:9px 2px;font-size:12px;font-weight:700;color:var(--tx)}.yr button.on{outline:2px solid var(--ac);outline-offset:1px}.yr .s-ok{background:#10b981;color:#fff;border-color:transparent}.yr .s-pa{background:#f59e0b;color:#fff;border-color:transparent}.yr .s-pe{background:#ef4444;color:#fff;border-color:transparent}
+.pay{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;font-size:13px}.pay>div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--bd);padding:7px 0}
+.net{font-size:28px;font-weight:800;color:var(--ac);margin-top:2px}
+@media(max-width:560px){.pay{grid-template-columns:1fr}.ad{min-height:50px}.ad small{display:none}}
 </style></head>
 <body><div id="app"></div><div id="modal"></div><div id="toast"></div>
 <script>
 const KEY='altitude.v1',$=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>Math.random().toString(36).slice(2,9),td=()=>new Date().toISOString().slice(0,10),fd=d=>d?new Date(d+'T00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'2-digit'}):'—';
 const days=d=>d?Math.round((new Date(d+'T00:00')-new Date(td()+'T00:00'))/864e5):null;
-const P={cloud:'M7 18a4 4 0 010-8 5 5 0 019.6-1A4.5 4.5 0 0117 18z',cr:'M3 17l6-6 4 4 8-8M15 7h6v6',dash:'M3 3h8v8H3zM13 3h8v5h-8zM13 10h8v11h-8zM3 13h8v8H3z',job:'M4 7h16v13H4zM9 7V4h6v3',work:'M6 3h9l4 4v14H6zM14 3v5h5M9 13h6M9 17h6',bell:'M6 16v-5a6 6 0 0112 0v5l2 2H4zM10 21h4',sun:'M12 8a4 4 0 100 8 4 4 0 000-8zM12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5',moon:'M20 14A8 8 0 0110 4a8 8 0 1010 10z',plus:'M12 5v14M5 12h14',chev:'M6 9l6 6 6-6',trash:'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13',copy:'M9 9h11v11H9zM5 15V4h11',eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 100 6 3 3 0 000-6z',ext:'M14 4h6v6M20 4l-9 9M18 14v6H4V6h6',check:'M5 13l4 4L19 7',dl:'M12 4v12M7 11l5 5 5-5M4 20h16',x:'M6 6l12 12M18 6L6 18'};
+const P={cal:'M4 5h16v15H4zM4 10h16M8 3v4M16 3v4',cloud:'M7 18a4 4 0 010-8 5 5 0 019.6-1A4.5 4.5 0 0117 18z',cr:'M3 17l6-6 4 4 8-8M15 7h6v6',dash:'M3 3h8v8H3zM13 3h8v5h-8zM13 10h8v11h-8zM3 13h8v8H3z',job:'M4 7h16v13H4zM9 7V4h6v3',work:'M6 3h9l4 4v14H6zM14 3v5h5M9 13h6M9 17h6',bell:'M6 16v-5a6 6 0 0112 0v5l2 2H4zM10 21h4',sun:'M12 8a4 4 0 100 8 4 4 0 000-8zM12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5',moon:'M20 14A8 8 0 0110 4a8 8 0 1010 10z',plus:'M12 5v14M5 12h14',chev:'M6 9l6 6 6-6',trash:'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13',copy:'M9 9h11v11H9zM5 15V4h11',eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 100 6 3 3 0 000-6z',ext:'M14 4h6v6M20 4l-9 9M18 14v6H4V6h6',check:'M5 13l4 4L19 7',dl:'M12 4v12M7 11l5 5 5-5M4 20h16',x:'M6 6l12 12M18 6L6 18'};
 const ic=(n,s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${P[n]}"/></svg>`;
 const mkS=n=>({id:uid(),name:n,date:'',st:'pending',files:[]});
 const seed=()=>({theme:matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light',read:[],
@@ -98,11 +108,11 @@ async function dlf(f){try{const s=atob(f.d.split(',')[1]),u=new Uint8Array(s.len
 function modal(h,lock){$('#modal').innerHTML=`<div class="ov" data-a="${lock?'':'mx'}"><div class="sheet">${h}</div></div>`}
 const close=()=>$('#modal').innerHTML='';
 const ask=(m,fn)=>{U.fn=fn;modal(`<h3>Confirm</h3><p>${esc(m)}</p><div class="r2" style="justify-content:flex-end"><button class="btn gh" data-a="mx">Cancel</button><button class="btn dg" data-a="yes">Yes, continue</button></div>`)};
-function render(){document.documentElement.dataset.theme=S.theme;const A=attn(),un=A.filter(a=>!S.read.includes(a.k)),T0={career:'Career',dash:'Dashboard',jobs:'Job Tracker',work:'Work Register'};
-const nav=(c)=>[['dash','Dashboard'],['career','Career'],['jobs','Jobs'],['work','Work']].map(([v,l])=>`<button class="${c} ${U.view==v?'on':''}" data-a="nav" data-v="${v}">${ic(v=='dash'?'dash':v=='jobs'?'job':v=='career'?'cr':'work',20)}<span>${l}</span></button>`).join('');
+function render(){document.documentElement.dataset.theme=S.theme;const A=attn(),un=A.filter(a=>!S.read.includes(a.k)),T0={att:'Attendance & Pay',career:'Career',dash:'Dashboard',jobs:'Job Tracker',work:'Work Register'};
+const nav=(c)=>[['dash','Dashboard'],['att','Attendance'],['career','Career'],['jobs','Jobs'],['work','Work']].map(([v,l])=>`<button class="${c} ${U.view==v?'on':''}" data-a="nav" data-v="${v}">${ic(v=='dash'?'dash':v=='jobs'?'job':v=='career'?'cr':v=='att'?'cal':'work',20)}<span>${l}</span></button>`).join('');
 $('#app').innerHTML=`<div class="app"><aside class="sb"><div class="logo"><i>A</i>Altitude</div>${nav('nv')}</aside><div class="mn"><div class="tp"><h1>${T0[U.view]}</h1><div class="ra"><button class="ib" data-a="cloud" aria-label="Google cloud backup">${ic('cloud')}${CL.u?'<b style="background:var(--ok);padding:0 4px">✓</b>':''}</button><button class="ib" data-a="bell" aria-label="Notifications">${ic('bell')}${un.length?`<b>${un.length}</b>`:''}</button><button class="ib" data-a="th" aria-label="Toggle theme">${ic(S.theme=='dark'?'sun':'moon')}</button>
 ${U.bell?`<div class="dp"><div class="r2" style="justify-content:space-between;padding:10px 13px;border-bottom:1px solid var(--bd)"><b>Notifications</b><button class="lnk" style="padding:0" data-a="rall">Mark all read</button></div>${A.length?A.map(a=>`<div class="ni ${S.read.includes(a.k)?'':'u'}" data-a="go" data-v="${a.v}" data-id="${a.id}"><span class="ch ${a.ty}">●</span><div><b>${esc(a.t)}</b><div class="sub">${esc(a.m)}</div></div></div>`).join(''):'<div class="es" style="border:0">All clear</div>'}</div>`:''}</div></div>
-<div class="wrap">${U.view=='dash'?dash(A):U.view=='jobs'?jobsV():U.view=='career'?careerV():workV()}</div></div></div><button class="fab" data-a="fab" aria-label="Quick add">+</button><nav class="bn">${nav('')}</nav>`}
+<div class="wrap">${U.view=='dash'?dash(A):U.view=='jobs'?jobsV():U.view=='career'?careerV():U.view=='att'?attV():workV()}</div></div></div><button class="fab" data-a="fab" aria-label="Quick add">+</button><nav class="bn">${nav('')}</nav>`}
 function dash(A){const f=S.jobs.reduce((a,j)=>a+(+j.fee||0),0),h=S.tasks.reduce((a,t)=>a+(+t.hrs||0),0),ac=S.jobs.filter(j=>j.status=='Active').length,mx=Math.max(1,...ST.map(s=>S.tasks.filter(t=>t.status==s).length));
 const wk=[...Array(7)].map((_,i)=>{const d=new Date(Date.now()-(6-i)*864e5).toISOString().slice(0,10);return{l:d.slice(8),v:S.tasks.filter(t=>t.date==d).reduce((a,t)=>a+(+t.hrs||0),0)}}),wm=Math.max(1,...wk.map(x=>x.v));
 const cl=S.jobs.length-ac,p=S.jobs.length?ac/S.jobs.length*100:0;
@@ -111,7 +121,7 @@ return `<div class="card hero"><small>${new Date().getHours()<12?'Good morning':
 <div class="g2"><div class="card" style="padding:14px"><b>Tasks by status</b><div class="bars">${ST.map(s=>{const n=S.tasks.filter(t=>t.status==s).length;return `<div>${n}<i style="height:${n/mx*80}%"></i>${s.split(' ')[0]}</div>`}).join('')}</div></div>
 <div class="card r2" style="padding:14px;gap:16px"><div class="donut" style="background:conic-gradient(var(--ok) 0 ${p}%,var(--mub) ${p}% 100%)"></div><div><b>Applications</b><div class="sub">● Active ${ac}</div><div class="sub">○ Closed ${cl}</div></div></div></div>
 <div class="card" style="padding:14px"><b>Hours, last 7 days</b><div class="bars">${wk.map(x=>`<div>${x.v||''}<i style="height:${x.v/wm*80}%"></i>${x.l}</div>`).join('')}</div></div>
-<div class="r2" style="justify-content:center"><button class="btn gh sm" data-a="bk">Export backup</button><label class="btn gh sm" style="cursor:pointer">Import backup<input type="file" accept=".json" hidden data-c="imp"></label></div>`}
+${attDash()}<div class="r2" style="justify-content:center"><button class="btn gh sm" data-a="bk">Export backup</button><label class="btn gh sm" style="cursor:pointer">Import backup<input type="file" accept=".json" hidden data-c="imp"></label></div>`}
 function jobsV(){const n=s=>S.jobs.filter(j=>s=='All'||j.status==s).length;
 return `<div class="ph"><h2>Applications</h2><button class="btn" data-a="aj">${ic('plus',16)} Add</button></div><input class="in" placeholder="Search exam, board or reg ID" value="${esc(U.jq)}" data-i="jq"><div class="tabs">${['Active','Closed','All'].map(t=>`<button class="${U.jt==t?'on':''}" data-a="jt" data-v="${t}">${t} ${n(t)}</button>`).join('')}</div><div id="jl">${jobList()}</div>`}
 function jobList(){const q=U.jq.toLowerCase(),L=S.jobs.filter(j=>(U.jt=='All'||j.status==U.jt)&&(!q||(j.name+j.board+j.regId).toLowerCase().includes(q)));return L.length?L.map(jobCard).join(''):`<div class="es">No applications here yet.<br><br><button class="btn" data-a="aj">Add application</button></div>`}
@@ -202,7 +212,7 @@ function roleBody(r){return `<div class="bd"><div class="g2">${rf(r,'org','Organ
 <label class="l">Notes, projects, achievements</label><textarea class="in" rows="3" data-c="rfd" data-id="${r.id}" data-k="notes">${esc(r.notes)}</textarea>
 <label class="l">Pay history (monthly gross)</label>${[...r.pay].sort((a,b)=>a.from.localeCompare(b.from)).map(p=>`<div class="fl"><span>From ${fm(p.from)} · <b>${inr(p.amt)}</b>/month</span><button class="ic" data-a="rp" data-id="${r.id}" data-m="${p.id}">${ic('x',15)}</button></div>`).join('')}<div class="r2 sh" style="margin-top:8px">${mp('pf','')}<input class="in" type="number" placeholder="Monthly ₹"><button class="btn sm" data-a="ap" data-id="${r.id}">Add</button></div>
 <label class="l">Bonus, arrears, freelance income</label>${r.extra.map(x=>`<div class="fl"><span>${fd(x.date)} · ${esc(x.label)} · <b>${inr(x.amt)}</b></span><button class="ic" data-a="rx" data-id="${r.id}" data-m="${x.id}">${ic('x',15)}</button></div>`).join('')}<div class="r2 sh" style="margin-top:8px"><input class="in" type="date" value="${td()}"><input class="in" type="number" placeholder="Amount ₹"><input class="in" placeholder="Label (Bonus)"><button class="btn sm" data-a="ax" data-id="${r.id}">Add</button></div>
-<label class="l">Documents (offer letter, relieving letter, payslips)</label>${r.files.map((f,i)=>`<div class="fl"><span>📎 ${esc(f.n)} · ${f.s}</span><button class="ic" data-a="df" data-w="r" data-id="${r.id}" data-m="${i}">${ic('dl',15)}</button><button class="ic" data-a="rf" data-w="r" data-id="${r.id}" data-m="${i}">${ic('x',15)}</button></div>`).join('')}<label class="up">${ic('dl',16)} Upload document<input type="file" hidden data-c="rfile" data-id="${r.id}"></label><div style="margin-top:12px"><button class="btn sm gh" data-a="drl" data-id="${r.id}" style="color:var(--er)">Delete role</button></div></div>`}
+<label class="l">Documents (offer letter, relieving letter, payslips)</label>${r.files.map((f,i)=>`<div class="fl"><span>📎 ${esc(f.n)} · ${f.s}</span><button class="ic" data-a="df" data-w="r" data-id="${r.id}" data-m="${i}">${ic('dl',15)}</button><button class="ic" data-a="rf" data-w="r" data-id="${r.id}" data-m="${i}">${ic('x',15)}</button></div>`).join('')}<label class="up">${ic('dl',16)} Upload document<input type="file" hidden data-c="rfile" data-id="${r.id}"></label><div style="margin-top:12px"><button class="btn sm" data-a="goatt" data-id="${r.id}">Attendance &amp; pay</button> <button class="btn sm gh" data-a="drl" data-id="${r.id}" style="color:var(--er)">Delete role</button></div></div>`}
 /* ===== Google cloud backup (Firebase, encrypted in browser) ===== */
 const FBCFG={apiKey:"AIzaSyDf8Ai7AP137PNNZWu9rRXkIomACQu38Rs",authDomain:"altitude-harijith.firebaseapp.com",projectId:"altitude-harijith",storageBucket:"altitude-harijith.firebasestorage.app",messagingSenderId:"202917390101",appId:"1:202917390101:web:5247f3d2f9646e36caab1c"}; /* paste your Firebase web config object here, e.g. {apiKey:"...",authDomain:"...",projectId:"...",appId:"..."} */
 const CL={u:null,pw:'',hold:0};
@@ -240,9 +250,93 @@ const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec
 function mp(name,val,attrs=''){const[y,m]=(val||'').split('-');const yr=new Date().getFullYear()+1;let ys='';for(let i=yr;i>=1960;i--)ys+=`<option value="${i}" ${y==i?'selected':''}>${i}</option>`;
 return `<div class="mp r2" style="flex-wrap:nowrap"><select class="in" data-c="mpc" data-part="m" aria-label="${name} month"><option value="">Month</option>${MN.map((n,i)=>{const v=String(i+1).padStart(2,'0');return `<option value="${v}" ${m==v?'selected':''}>${n}</option>`}).join('')}</select><select class="in" data-c="mpc" data-part="y" aria-label="${name} year" style="max-width:110px"><option value="">Year</option>${ys}</select><input type="hidden" name="${name}" class="mpv" value="${esc(val||'')}" ${attrs}></div>`}
 Object.assign(C,{mpc:t=>{const w=t.closest('.mp'),m=w.querySelector('[data-part=m]').value,y=w.querySelector('[data-part=y]').value,h=w.querySelector('.mpv');h.value=y&&m?y+'-'+m:'';if(h.dataset.c)h.dispatchEvent(new Event('change',{bubbles:true}))}});
+/* ===== Attendance & Pay ===== */
+const SC_S={P:'Present',H:'Half day',A:'Absent',L:'Leave',HD:'Holiday',U:'Unpaid leave'};
+const LC={P:'#10b981',H:'#f59e0b',A:'#ef4444',L:'#3b82f6',HD:'#8b5cf6',U:'#64748b'};
+const CYC=['','P','H','A','L','HD','U'];
+const ATW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const CRD={P:1,H:.5,L:1,HD:1,A:0,U:0};
+const AT=r=>r.attn||(r.attn={days:{},ben:[],ded:[],set:[]});
+const dim=ym=>{const[y,m]=ym.split('-').map(Number);return new Date(y,m,0).getDate()};
+const dayOff=ds=>new Date(ds+'T00:00').getDay()===0;
+function mlabel(ym){return new Date(ym+'-01T00:00').toLocaleDateString('en-IN',{month:'long',year:'numeric'})}
+function payAt(r,ym){let v=0,best='';(r.pay||[]).forEach(p=>{if(p.from<=ym&&p.from>=best){best=p.from;v=+p.amt||0}});return v}
+function monthStats(r,ym){const a=AT(r),n=dim(ym),cnt={P:0,H:0,L:0,HD:0,A:0,U:0};let wd=0,paid=0,extra=0;
+  for(let d=1;d<=n;d++){const ds=ym+'-'+String(d).padStart(2,'0'),st=a.days[ds],off=dayOff(ds);if(!off)wd++;if(st){cnt[st]++;const c=CRD[st];if(off)extra+=c;else paid+=c}}
+  return{wd,cnt,paid,extra,marked:Object.keys(a.days).some(k=>k.startsWith(ym))}}
+function calcPay(r,ym){const a=AT(r),st=monthStats(r,ym),basic=payAt(r,ym),
+  fx=a.ben.filter(b=>b.k!='att').reduce((s,b)=>s+(+b.amt||0),0),
+  at=a.ben.filter(b=>b.k=='att').reduce((s,b)=>s+(+b.amt||0),0),
+  ded=a.ded.reduce((s,b)=>s+(+b.amt||0),0),
+  f=st.marked&&st.wd?Math.min(1,st.paid/st.wd):null,estimate=f===null,fac=estimate?1:f,
+  gross=basic*fac+at*fac+fx,net=Math.max(0,gross-ded),
+  rec=a.set.filter(x=>x.ym==ym).reduce((s,x)=>s+(+x.amt||0),0),bal=net-rec;
+  return{basic,fx,at,ded,f,estimate,fac,gross,net,rec,bal,st}}
+function monthsOf(r){const a=AT(r),s=new Set(Object.keys(a.days).map(k=>k.slice(0,7)));a.set.forEach(x=>s.add(x.ym));return [...s].sort()}
+function dues(){const out=[];RL().forEach(r=>monthsOf(r).forEach(ym=>{const c=calcPay(r,ym);if(!c.estimate&&c.bal>0.5)out.push({r,ym,c})}));return out}
+function attSummary(){let recAll=0;RL().forEach(r=>AT(r).set.forEach(x=>{recAll+=(+x.amt||0)}));const d=dues();return{out:d.reduce((s,x)=>s+x.c.bal,0),pend:d,recAll}}
+function attAlerts(){return dues().map(x=>({k:'pay'+x.r.id+x.ym,ty:'wa',t:x.r.org+' · '+mlabel(x.ym),m:'Salary balance '+inr(x.c.bal)+' still to be received',v:'att',id:x.r.id+'|'+x.ym}))}
+function attDash(){const s=attSummary(),now=td().slice(0,7);let pres=0,wd=0;
+  RL().filter(r=>!r.to).forEach(r=>{const x=monthStats(r,now);pres+=x.paid;wd+=x.wd});
+  const last=[...Array(6)].map((_,i)=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-(5-i));return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')});
+  const rv=last.map(ym=>RL().reduce((q,r)=>q+AT(r).set.filter(x=>x.ym==ym).reduce((z,x)=>z+(+x.amt||0),0),0)),mx=Math.max(1,...rv),pct=wd?Math.round(pres/wd*100):0;
+  return `<div class="kp"><div class="card"><small>Salary pending</small><b style="color:${s.out>0.5?'var(--er)':'inherit'}">${inr(s.out)}</b><small>${s.pend.length} month(s) with balance</small></div><div class="card"><small>Salary received</small><b>${inr(s.recAll)}</b></div><div class="card"><small>Attendance this month</small><b>${pct}%</b><small>${pres} of ${wd} working days</small></div></div><div class="card" style="padding:14px"><b>Salary received, last 6 months</b><div class="bars">${last.map((ym,i)=>`<div>${rv[i]?lk(rv[i]):''}<i style="height:${rv[i]/mx*80}%"></i>${mlabel(ym).slice(0,3)}</div>`).join('')}</div></div>`}
+function attV(){
+  U.am=U.am||td().slice(0,7);
+  const L=RL();
+  if(!L.length)return `<div class="ph"><h2>Attendance &amp; Pay</h2></div><div class="es">Add a company under Career first, then track its attendance and salary here.<br><br><button class="btn" data-a="nav" data-v="career">Go to Career</button></div>`;
+  if(!R(U.ar))U.ar=(L.find(x=>!x.to)||L[0]).id;
+  const r=R(U.ar),ym=U.am,c=calcPay(r,ym),a=AT(r),st=c.st,cnt=st.cnt,today=td(),[yy,mm]=ym.split('-').map(Number),first=new Date(yy,mm-1,1).getDay(),n=dim(ym);
+  let cells='';for(let i=0;i<first;i++)cells+='<div class="ad blank"></div>';
+  for(let d=1;d<=n;d++){const ds=ym+'-'+String(d).padStart(2,'0'),code=a.days[ds]||'',off=dayOff(ds),fut=ds>today;
+    const cls=[code||(off?'off':''),fut?'fut':'',ds==today?'tod':''].filter(Boolean).join(' ');
+    cells+=`<button class="ad ${cls}" data-a="ad" data-d="${ds}" data-id="${r.id}" ${fut?'disabled':''}>${d}<small>${code?SC_S[code]:(off?'Off':'')}</small></button>`}
+  const chips=L.map(x=>`<button class="${x.id==r.id?'on':''}" data-a="asel" data-id="${x.id}">${esc(x.org)}</button>`).join('');
+  const yr=[...Array(12)].map((_,i)=>{const k=yy+'-'+String(i+1).padStart(2,'0'),q=calcPay(r,k),has=q.st.marked||q.rec>0;
+    const s=!has?'':(q.rec>0&&q.bal<=0.5?'s-ok':q.rec>0?'s-pa':(!q.estimate&&q.bal>0.5?'s-pe':''));
+    return `<button class="${s} ${k==ym?'on':''}" data-a="amset" data-v="${k}">${MN[i]}</button>`}).join('');
+  const bad=c.rec>0&&c.bal<=0.5?['ok','Settled']:c.rec>0?['wa','Partly paid']:c.estimate?['ac','Attendance not marked']:c.net<=0?['','Nothing due']:['er','Payment pending'];
+  const ben=a.ben.map(b=>({...b,t:'ben',tag:b.k=='att'?'Attendance-linked':'Fixed'})).concat(a.ded.map(b=>({...b,t:'ded',tag:'Deduction'})));
+  const items=ben.length?ben.map(x=>`<div class="fl"><span><b>${esc(x.name)}</b> <small style="color:var(--mu)">${x.tag}</small></span><b>${x.t=='ded'?'−':''}${inr(x.amt)}</b><button class="ic" data-a="adel" data-id="${r.id}" data-t="${x.t}" data-x="${x.id}" aria-label="Remove">${ic('x',15)}</button></div>`).join(''):'<div class="sub" style="margin-top:8px">Add HRA, travel, PF, ESI or other items. Fixed items are paid in full; attendance-linked items are prorated.</div>';
+  const hist=[...a.set].sort((x,y)=>y.date.localeCompare(x.date));
+  const histHtml=hist.length?hist.map(x=>`<div class="fl"><span>${fd(x.date)} · <b>${mlabel(x.ym)}</b> · ${esc(x.mode)}${x.note?' · '+esc(x.note):''}</span><b>${inr(x.amt)}</b><button class="ic" data-a="adel" data-id="${r.id}" data-t="set" data-x="${x.id}" aria-label="Remove">${ic('x',15)}</button></div>`).join(''):'<div class="sub" style="margin-top:8px">No payments recorded yet.</div>';
+  const totRec=a.set.reduce((s,x)=>s+(+x.amt||0),0);
+  const legend=['P','H','A','L','HD','U'].map(k=>`<span><i style="background:${LC[k]}"></i>${SC_S[k]}</span>`).join('');
+  const fac=c.estimate?100:Math.round(c.fac*100);
+  return `<div class="ph"><h2>Attendance &amp; Pay</h2></div>
+<div class="tabs">${chips}</div>
+<div class="card" style="padding:14px"><div class="r2" style="justify-content:space-between;flex-wrap:nowrap"><b>Year ${yy}</b></div><div class="yr" style="margin-top:8px">${yr}</div></div>
+<div class="card" style="padding:14px"><div class="r2" style="justify-content:space-between;flex-wrap:nowrap"><button class="ic" data-a="amv" data-v="-1" aria-label="Previous month">‹</button><b style="font-size:16px">${mlabel(ym)}</b><button class="ic" data-a="amv" data-v="1" aria-label="Next month">›</button></div>
+<div class="kp" style="margin:12px 0 0"><div class="card" style="padding:10px"><small>Present</small><b>${cnt.P}</b></div><div class="card" style="padding:10px"><small>Half days</small><b>${cnt.H}</b></div><div class="card" style="padding:10px"><small>Absent</small><b>${cnt.A}</b></div><div class="card" style="padding:10px"><small>Leave / holiday</small><b>${cnt.L+cnt.HD}</b></div><div class="card" style="padding:10px"><small>Attendance</small><b>${st.wd?Math.round(st.paid/st.wd*100):0}%</b><small>${st.paid} of ${st.wd} working days${st.extra?' · '+st.extra+' Sunday':''}</small></div></div>
+<div class="legend" style="margin:10px 0">${legend}</div>
+<div class="cal">${ATW.map(w=>`<div class="wd">${w}</div>`).join('')}${cells}</div>
+<div class="r2" style="margin-top:12px;gap:8px"><button class="btn sm gh" data-a="abulk">Mark weekdays present</button><button class="btn sm gh" data-a="aclr" data-id="${r.id}" style="color:var(--er)">Clear month</button></div>
+<div class="sub" style="margin-top:8px">Tap a day to cycle: Present → Half → Absent → Leave → Holiday → Unpaid → clear. Sundays are weekly off; working on a Sunday counts as extra.</div></div>
+<div class="card" style="padding:16px"><div class="r2" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-start"><div><div class="sub">Net payable · ${mlabel(ym)} · ${esc(r.org)}</div><div class="net">${inr(c.net)}</div><div class="sub">${c.estimate?'Estimate: no attendance marked yet, full salary assumed':'Attendance factor '+fac+'%'}</div></div><span class="ch ${bad[0]}">${bad[1]}</span></div>
+<div class="pay" style="margin-top:12px"><div><span>Basic (prorated)</span><b>${inr(c.basic*(c.estimate?1:(c.f||0)))}</b></div><div><span>Fixed benefits</span><b>${inr(c.fx)}</b></div><div><span>Attendance-linked</span><b>${inr(c.at*(c.estimate?1:(c.f||0)))}</b></div><div><span>Deductions</span><b>−${inr(c.ded)}</b></div><div><span>Gross</span><b>${inr(c.gross)}</b></div><div><span>Received</span><b>${inr(c.rec)}</b></div><div><span>Balance</span><b style="color:${c.bal>0.5?'var(--er)':'var(--ok)'}">${inr(c.bal)}</b></div></div>
+<div class="r2" style="margin-top:14px"><button class="btn sm" data-a="aset" data-id="${r.id}">Record payment</button></div></div>
+<div class="card" style="padding:16px"><div class="r2" style="justify-content:space-between;flex-wrap:nowrap"><b>Benefits &amp; deductions</b><button class="btn sm gh" data-a="aitem" data-id="${r.id}">+ Add</button></div>${items}</div>
+<div class="card" style="padding:16px"><div class="r2" style="justify-content:space-between;flex-wrap:nowrap"><b>Payment history</b><span class="sub">Total received ${inr(totRec)}</span></div>${histHtml}</div>`}
+function attReopen(){render()}
+Object.assign(H,{
+  asel:t=>{U.ar=t.dataset.id;render()},
+  amv:t=>{const[y,m]=(U.am||td().slice(0,7)).split('-').map(Number),d=new Date(y,m-1+ +t.dataset.v,1);U.am=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');render()},
+  amset:t=>{U.am=t.dataset.v;render()},
+  ad:t=>{const a=AT(R(t.dataset.id)),d=t.dataset.d;if(d>td())return toast('Future dates cannot be marked');const cur=a.days[d]||'',nx=CYC[(CYC.indexOf(cur)+1)%CYC.length];if(nx)a.days[d]=nx;else delete a.days[d];save();render()},
+  abulk:()=>{const r=R(U.ar);if(!r)return;const a=AT(r),ym=U.am,n=dim(ym),t=td();let k=0;for(let d=1;d<=n;d++){const ds=ym+'-'+String(d).padStart(2,'0');if(ds>t||dayOff(ds)||a.days[ds])continue;a.days[ds]='P';k++}save();toast(k+' day(s) marked present');render()},
+  aclr:t=>{const id=t.dataset.id,ym=U.am;ask('Clear all attendance marks for this month?',()=>{const a=AT(R(id));Object.keys(a.days).forEach(k=>{if(k.startsWith(ym))delete a.days[k]});save();render()})},
+  aset:t=>{const r=R(t.dataset.id),c=calcPay(r,U.am);modal(`<h3>Record payment</h3><p class="sub">${esc(r.org)} · ${mlabel(U.am)}<br>Net due ${inr(c.net)} · balance ${inr(c.bal)}</p><form data-s="aset" data-id="${r.id}"><label class="l">Salary month</label>${mp('sm',U.am)}<div class="g2"><div><label class="l">Amount received (₹) *</label><input class="in" name="amt" type="number" min="1" step="0.01" required value="${Math.max(0,Math.round(c.bal))}"></div><div><label class="l">Date received *</label><input class="in" name="date" type="date" required value="${td()}"></div><div><label class="l">Mode</label><select class="in" name="mode">${['Bank transfer','UPI','Cash','Cheque','Other'].map(x=>`<option>${x}</option>`).join('')}</select></div><div><label class="l">Reference / note</label><input class="in" name="note" placeholder="UTR, cheque no."></div></div><div class="r2" style="justify-content:flex-end;margin-top:16px"><button type="button" class="btn gh" data-a="mx">Cancel</button><button class="btn">Save payment</button></div></form>`)},
+  aitem:t=>modal(`<h3>Add benefit or deduction</h3><form data-s="aitem" data-id="${t.dataset.id}"><label class="l">Type</label><select class="in" name="kind"><option value="fixed">Benefit · fixed monthly (paid in full)</option><option value="att">Benefit · linked to attendance (prorated)</option><option value="ded">Deduction (PF, ESI, TDS, other)</option></select><label class="l">Name *</label><input class="in" name="name" required placeholder="HRA, travel allowance, PF"><label class="l">Monthly amount (₹) *</label><input class="in" name="amt" type="number" min="0" step="0.01" required><div class="r2" style="justify-content:flex-end;margin-top:16px"><button type="button" class="btn gh" data-a="mx">Cancel</button><button class="btn">Save</button></div></form>`),
+  adel:t=>{const id=t.dataset.id,L2=t.dataset.t,x=t.dataset.x;ask('Remove this entry?',()=>{const a=AT(R(id));a[L2]=a[L2].filter(i=>i.id!=x);save();render()})},
+  goatt:t=>{U.view='att';U.ar=t.dataset.id;render();scrollTo(0,0)}
+});
+const _go=H.go;H.go=t=>{if(t.dataset.v=='att'){const[rid,ym]=String(t.dataset.id).split('|');U.view='att';U.bell=false;U.ar=rid;if(ym)U.am=ym;render();scrollTo(0,0);return}_go(t)};
+const _attn=attn;attn=()=>[..._attn(),...attAlerts()];
 document.addEventListener('change',e=>{const c=e.target.dataset.c;c&&C[c]&&C[c](e.target)});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,k=f.dataset.s,v=Object.fromEntries(new FormData(f));
 if(k=='pw'){CL.pw=v.pw;close();CL.next&&CL.next();return}
+if(k=='aset'){const r=R(f.dataset.id),ym=v.sm,amt=+v.amt;if(!ym||!(amt>0))return toast('Choose the month and enter the amount');AT(r).set.push({id:uid(),ym,amt,date:v.date||td(),mode:v.mode||'Other',note:(v.note||'').trim()});U.ar=r.id;U.am=ym}
+if(k=='aitem'){const r=R(f.dataset.id),a=AT(r);if(!v.name.trim())return toast('Enter a name');const amt=+v.amt||0;if(v.kind=='ded')a.ded.push({id:uid(),name:v.name.trim(),amt});else a.ben.push({id:uid(),name:v.name.trim(),amt,k:v.kind});U.ar=r.id}
 if(k=='rl'){if(!v.from)return toast('Choose the start month and year');const r={id:uid(),org:v.org.trim(),title:v.title.trim(),type:v.type,loc:v.loc,from:v.from,to:v.to,reason:'',notes:'',pay:v.amt?[{id:uid(),from:v.from,amt:+v.amt}]:[],extra:[],files:[]};RL().push(r);U.ro=r.id;U.view='career'}
 if(k=='ed'){const e={id:uid(),name:v.name.trim(),org:v.org,year:v.year,files:[]};if(v.file&&v.file.size){try{e.files.push(await rdf(v.file))}catch(x){return}}ED().push(e);U.view='career'}
 if(k=='aj'){U.view='jobs';const n=v.stages.split(',').map(s=>s.trim()).filter(Boolean),j={id:uid(),name:v.name.trim(),board:v.board.trim(),fee:+v.fee||0,status:'Active',remark:'',regId:v.regId,user:'',pass:v.pass,url:v.url&&!/^https?:/.test(v.url)?'https://'+v.url:v.url,examDate:v.examDate,alert:'',checked:'',upd:td(),log:[{d:td(),m:'Application created'}],stages:(n.length?n:['Registration','Admit Card','Exam','Result']).map((x,i)=>({...mkS(x),st:i==0?'done':i==1?'current':'pending',date:i==0?td():''}))};S.jobs.unshift(j);U.open=j.id;U.jt='Active';}
