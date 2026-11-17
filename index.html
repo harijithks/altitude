@@ -82,6 +82,18 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:
 .pay{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;font-size:13px}.pay>div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--bd);padding:7px 0}
 .net{font-size:28px;font-weight:800;color:var(--ac);margin-top:2px}
 @media(max-width:560px){.pay{grid-template-columns:1fr}.ad{min-height:50px}.ad small{display:none}}
+
+/* ===== Layout fixes: stop forms overflowing and clipping ===== */
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g2>*{min-width:0}
+.r2>.in{min-width:min(120px,100%)}
+.mp{display:flex;gap:6px;width:100%;min-width:0}
+.mp>select{min-width:0!important;max-width:none!important;flex:1 1 0;width:auto}
+.sheet{overflow-x:hidden;width:100%}
+.sheet input,.sheet select,.sheet textarea{max-width:100%;min-width:0}
+.ov{padding:12px}
+@media(min-width:600px){.ov{padding:16px}}
+@media(max-width:560px){.g2{grid-template-columns:minmax(0,1fr)}}
 </style></head>
 <body><div id="app"></div><div id="modal"></div><div id="toast"></div>
 <script>
@@ -332,6 +344,7 @@ Object.assign(H,{
 });
 const _go=H.go;H.go=t=>{if(t.dataset.v=='att'){const[rid,ym]=String(t.dataset.id).split('|');U.view='att';U.bell=false;U.ar=rid;if(ym)U.am=ym;render();scrollTo(0,0);return}_go(t)};
 const _attn=attn;attn=()=>[..._attn(),...attAlerts()];
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;const ov=document.querySelector('#modal .ov');if(ov&&ov.dataset.a==='mx')close()});
 document.addEventListener('change',e=>{const c=e.target.dataset.c;c&&C[c]&&C[c](e.target)});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,k=f.dataset.s,v=Object.fromEntries(new FormData(f));
 if(k=='pw'){CL.pw=v.pw;close();CL.next&&CL.next();return}
