@@ -105,8 +105,8 @@ const ic=(n,s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="no
 const mkS=n=>({id:uid(),name:n,date:'',st:'pending',files:[]});
 const seed=()=>({theme:matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light',read:[],
 jobs:[],tasks:[]});
-let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}S=S||seed();
-const save=()=>{S.ts=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Storage full: remove some files')}cloudSoon()};
+let S=seed();
+const save=()=>{S.ts=Date.now();schedulePush()};
 const U={view:'dash',open:null,si:{},more:{},to:null,bell:false,jt:'Active',jq:'',wt:'Ongoing',wq:'',sort:'new',per:'all',from:'',to2:''};
 const toast=m=>{const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',2600)};
 const SC={Ongoing:'ac','Decision Required':'wa',Completed:'ok'},ST=['Ongoing','Decision Required','Completed'];
@@ -114,13 +114,13 @@ const J=id=>S.jobs.find(j=>j.id==id),T=id=>S.tasks.find(t=>t.id==id);
 function alertOf(j){if(j.status!=='Active')return '';if(j.alert)return j.alert;const d=days(j.examDate),a=j.stages.find(s=>/admit|hall/i.test(s.name));if(d!==null&&d>=0&&d<=7&&a&&!a.files.length&&a.st!=='done'&&j.ackDate!==td())return `Exam in ${d} day(s) and no hall ticket is uploaded. Download it now.`;return ''}
 function attn(){const r=[];S.jobs.filter(j=>j.status==='Active').forEach(j=>{const a=alertOf(j),d=days(j.examDate);if(a)r.push({k:'a'+j.id+(j.alert||td()),ty:'er',t:j.name,m:a,v:'jobs',id:j.id});if(d!==null&&d>=0&&d<=14)r.push({k:'d'+j.id+j.examDate,ty:'wa',t:j.name,m:`Exam on ${fd(j.examDate)} (${d} days left)`,v:'jobs',id:j.id});if((j.checked||'')<td())r.push({k:'c'+j.id+td(),ty:'ac',t:j.name,m:'Daily check due: look for admit card or notice updates',v:'jobs',id:j.id})});
 S.tasks.filter(t=>t.status==='Decision Required'&&days(t.date)<=-3).forEach(t=>r.push({k:'t'+t.id,ty:'wa',t:t.title,m:`Waiting for decision for ${-days(t.date)} days`,v:'work',id:t.id}));return r}
-const rdf=f=>new Promise((ok,no)=>{if(f.size>1.5e6){toast('File over 1.5 MB. Compress it first.');return no()}const r=new FileReader();r.onload=()=>ok({n:f.name,s:Math.round(f.size/1024)+' KB',d:r.result});r.readAsDataURL(f)});
+const rdf=f=>new Promise((ok,no)=>{if(f.size>6e5){toast('File over 600 KB. Compress it first.');return no()}const r=new FileReader();r.onload=()=>ok({n:f.name,s:Math.round(f.size/1024)+' KB',d:r.result});r.readAsDataURL(f)});
 async function dlBlob(n,b){if(window.claude){const dl=await claude.use('downloads');return dl.save({filename:n,data:b})}const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;document.body.appendChild(a);a.click();a.remove()}
 async function dlf(f){try{const s=atob(f.d.split(',')[1]),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);await dlBlob(f.n,new Blob([u]))}catch(e){toast('Not saved')}}
 function modal(h,lock){$('#modal').innerHTML=`<div class="ov" data-a="${lock?'':'mx'}"><div class="sheet">${h}</div></div>`}
 const close=()=>$('#modal').innerHTML='';
 const ask=(m,fn)=>{U.fn=fn;modal(`<h3>Confirm</h3><p>${esc(m)}</p><div class="r2" style="justify-content:flex-end"><button class="btn gh" data-a="mx">Cancel</button><button class="btn dg" data-a="yes">Yes, continue</button></div>`)};
-function render(){document.documentElement.dataset.theme=S.theme;const A=attn(),un=A.filter(a=>!S.read.includes(a.k)),T0={att:'Attendance & Pay',career:'Career',dash:'Dashboard',jobs:'Job Tracker',work:'Work Register'};
+function render(){document.documentElement.dataset.theme=S.theme;if(!CL.u||CL.boot){$('#app').innerHTML=CL.u?loadingV():loginV();$('#modal').innerHTML='';return}const A=attn(),un=A.filter(a=>!S.read.includes(a.k)),T0={att:'Attendance & Pay',career:'Career',dash:'Dashboard',jobs:'Job Tracker',work:'Work Register'};
 const nav=(c)=>[['dash','Dashboard'],['att','Attendance'],['career','Career'],['jobs','Jobs'],['work','Work']].map(([v,l])=>`<button class="${c} ${U.view==v?'on':''}" data-a="nav" data-v="${v}">${ic(v=='dash'?'dash':v=='jobs'?'job':v=='career'?'cr':v=='att'?'cal':'work',20)}<span>${l}</span></button>`).join('');
 $('#app').innerHTML=`<div class="app"><aside class="sb"><div class="logo"><i>A</i>Altitude</div>${nav('nv')}</aside><div class="mn"><div class="tp"><h1>${T0[U.view]}</h1><div class="ra"><button class="ib" data-a="cloud" aria-label="Google cloud backup">${ic('cloud')}${CL.u?'<b style="background:var(--ok);padding:0 4px">✓</b>':''}</button><button class="ib" data-a="bell" aria-label="Notifications">${ic('bell')}${un.length?`<b>${un.length}</b>`:''}</button><button class="ib" data-a="th" aria-label="Toggle theme">${ic(S.theme=='dark'?'sun':'moon')}</button>
 ${U.bell?`<div class="dp"><div class="r2" style="justify-content:space-between;padding:10px 13px;border-bottom:1px solid var(--bd)"><b>Notifications</b><button class="lnk" style="padding:0" data-a="rall">Mark all read</button></div>${A.length?A.map(a=>`<div class="ni ${S.read.includes(a.k)?'':'u'}" data-a="go" data-v="${a.v}" data-id="${a.id}"><span class="ch ${a.ty}">●</span><div><b>${esc(a.t)}</b><div class="sub">${esc(a.m)}</div></div></div>`).join(''):'<div class="es" style="border:0">All clear</div>'}</div>`:''}</div></div>
@@ -345,6 +345,121 @@ Object.assign(H,{
 const _go=H.go;H.go=t=>{if(t.dataset.v=='att'){const[rid,ym]=String(t.dataset.id).split('|');U.view='att';U.bell=false;U.ar=rid;if(ym)U.am=ym;render();scrollTo(0,0);return}_go(t)};
 const _attn=attn;attn=()=>[..._attn(),...attAlerts()];
 document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;const ov=document.querySelector('#modal .ov');if(ov&&ov.dataset.a==='mx')close()});
+/* ===== Login, per-account data and real-time sync ===== */
+const FB_V='https://www.gstatic.com/firebasejs/10.12.2/';
+CL.ts=0;CL.fids=new Set();CL.pend=null;CL.dirty=false;CL.first=false;CL.boot=true;
+const DROPD=(k,v)=>(k==='d'&&typeof v==='string'&&v.startsWith('data:'))?undefined:v;
+function friendly(e){const c=(e&&e.code)||'';const map={
+ 'auth/unauthorized-domain':"This website is not authorised yet. In Firebase go to Authentication, Settings, Authorized domains, and add harijithks.github.io.",
+ 'auth/operation-not-allowed':'Google sign-in is not enabled. In Firebase go to Authentication, Sign-in method, and enable Google.',
+ 'auth/popup-closed-by-user':'Sign-in was cancelled.','auth/cancelled-popup-request':'Sign-in was cancelled.',
+ 'auth/network-request-failed':'No internet connection. Please try again.'};
+ return map[c]||((e&&e.message)||'Sign-in failed')}
+async function fbInit(){if(CL.fb)return CL.fb;if(!FBCFG)throw new Error('Firebase is not configured');
+ const[a,au,fs]=await Promise.all(['app','auth','firestore'].map(m=>import(FB_V+'firebase-'+m+'.js')));
+ const app=a.getApps().length?a.getApp():a.initializeApp(FBCFG);let db;
+ try{db=fs.initializeFirestore(app,{localCache:fs.persistentLocalCache({tabManager:fs.persistentMultipleTabManager()})})}catch(e){db=fs.getFirestore(app)}
+ CL.fb={a,au,fs,auth:au.getAuth(app),db};return CL.fb}
+function typing(){const e=document.activeElement;return!!e&&['INPUT','TEXTAREA','SELECT'].includes(e.tagName)&&!!e.closest('#app,#modal')}
+function allFiles(){const o=[];S.jobs.forEach(j=>j.stages.forEach(s=>o.push(...s.files)));S.tasks.forEach(t=>o.push(...t.files));RL().forEach(r=>o.push(...r.files));ED().forEach(e=>o.push(...e.files));return o}
+function fidSet(){return new Set(allFiles().map(x=>x.fid).filter(Boolean))}
+function schedulePush(){CL.dirty=true;clearTimeout(CL.pt);CL.pt=setTimeout(()=>{CL.dirty=false;pushNow()},700)}
+async function pushNow(){
+ const f=CL.fb;if(!CL.u||!f)return;const me=CL.u.uid;
+ allFiles().forEach(x=>{if(x.d&&!x.fid){x.fid=uid();f.fs.setDoc(f.fs.doc(f.db,'users',me,'files',x.fid),{d:x.d,n:x.n}).catch(e=>toast('Attachment upload issue: '+e.message))}});
+ const now=fidSet(),prev=CL.fids||new Set();
+ prev.forEach(id=>{if(!now.has(id))f.fs.deleteDoc(f.fs.doc(f.db,'users',me,'files',id)).catch(()=>{})});
+ CL.fids=now;
+ const state=JSON.stringify(S,DROPD);
+ if(state.length>950000)toast('Your data is nearly full. Export a backup and remove old attachments.');
+ CL.ts=S.ts;CL.pend=null;CL.sync='saving';
+ try{await f.fs.setDoc(f.fs.doc(f.db,'users',me,'data','main'),{state,ts:S.ts});CL.sync='saved';CL.last=Date.now()}
+ catch(e){CL.sync='error';toast('Sync problem: '+e.message)}
+}
+function applyRemote(data){const ts=data.ts||0;if(ts<=CL.ts)return;
+ if(CL.dirty||typing()){CL.pend=data;return}
+ CL.ts=ts;S=JSON.parse(data.state);CL.fids=fidSet();render()}
+document.addEventListener('focusout',()=>setTimeout(()=>{if(CL.pend&&!CL.dirty&&!typing()){const d=CL.pend;CL.pend=null;applyRemote(d)}},200));
+function seedFirst(){let base=null;try{base=JSON.parse(localStorage.getItem('workdash.v1'))}catch(e){}
+ const has=base&&((base.jobs||[]).length||(base.tasks||[]).length||(base.roles||[]).length);
+ S=has?base:seed();if(has)localStorage.removeItem('workdash.v1');
+ S.jobs=S.jobs||[];S.tasks=S.tasks||[];S.ts=Date.now();CL.fids=fidSet();pushNow()}
+async function onUser(u){
+ if(CL.unsub){CL.unsub();CL.unsub=null}clearTimeout(CL.bt);
+ if(!u){CL.u=null;CL.boot=false;CL.first=false;S=seed();CL.ts=0;CL.fids=new Set();render();return}
+ CL.u=u;CL.boot=true;CL.first=true;CL.ts=0;CL.pend=null;CL.dirty=false;CL.err='';render();
+ const f=CL.fb,ref=f.fs.doc(f.db,'users',u.uid,'data','main');
+ CL.bt=setTimeout(()=>{if(CL.first){CL.first=false;CL.boot=false;render();alertGate()}},9000);
+ CL.unsub=f.fs.onSnapshot(ref,snap=>{
+  if(snap.exists()){if(snap.metadata.hasPendingWrites)return;applyRemote(snap.data())}
+  else if(CL.first&&snap.metadata.fromCache)return;
+  else if(CL.first)seedFirst();
+  if(CL.first){CL.first=false;clearTimeout(CL.bt);CL.boot=false;render();alertGate()}
+ },err=>{CL.err=friendly(err);CL.boot=false;render()});
+}
+async function boot(){
+ if(!FBCFG){CL.boot=false;CL.err='This copy of Altitude is not connected to Firebase yet.';render();return}
+ try{const f=await fbInit();
+  f.au.getRedirectResult(f.auth).catch(e=>{CL.err=friendly(e);CL.boot=false;render()});
+  f.au.onAuthStateChanged(f.auth,u=>onUser(u));
+ }catch(e){CL.boot=false;CL.err='Could not start: '+e.message;render()}
+}
+function loadingV(){return `<div style="min-height:100vh;display:grid;place-items:center;text-align:center"><div><div class="sub" style="font-size:15px">Loading your Altitude data…</div><div class="sub" style="margin-top:6px;font-size:12px">Syncing with your Google account</div></div></div>`}
+function loginV(){const busy=CL.boot;return `<div style="min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(1000px 560px at 5% -10%,#4f46e5 0%,transparent 60%),radial-gradient(900px 520px at 110% 110%,#db2777 0%,transparent 55%),var(--bg)">
+<div class="card" style="max-width:420px;width:100%;padding:32px 26px;margin:0;text-align:center;box-shadow:0 30px 80px rgba(15,23,42,.25)">
+<div style="width:64px;height:64px;border-radius:18px;margin:0 auto 14px;background:linear-gradient(135deg,#4f46e5,#db2777);color:#fff;display:grid;place-items:center;font-size:30px;font-weight:800">A</div>
+<h1 style="margin:0;font-size:26px;letter-spacing:-.02em">Altitude</h1>
+<p class="sub" style="margin:8px 0 22px;font-size:14px">Your career, attendance and salary, synced in real time to your Google account.</p>
+${CL.err?`<div class="bn2" style="text-align:left">${esc(CL.err)}</div>`:''}
+<button data-a="gsi" class="btn" ${busy?'disabled':''} style="width:100%;padding:13px;font-size:15px;background:#fff;color:#111;border:1px solid var(--bd)">${busy?'Signing in…':'Continue with Google'}</button>
+<ul class="sub" style="text-align:left;margin:22px 0 0;padding-left:18px;line-height:1.9">
+<li>Your data is private to your Google account</li><li>Sign in on any device and your data appears instantly</li><li>Works offline; changes sync when you reconnect</li></ul>
+<p class="sub" style="font-size:11px;margin-top:20px">No PIN or passphrase needed.</p></div></div>`}
+cloudSoon=()=>schedulePush();
+backup=async()=>schedulePush();
+cloudRestore=async()=>{toast('Your data syncs automatically')};
+cloudCheck=async()=>{};
+askPw=next=>{next&&next()};
+dlf=async f=>{try{let d=f.d;if(!d&&f.fid){const s=await CL.fb.fs.getDoc(CL.fb.fs.doc(CL.fb.db,'users',CL.u.uid,'files',f.fid));d=s.exists()?s.data().d:null;if(!d){toast('This attachment needs an internet connection');return}}
+ const b=atob(d.split(',')[1]),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);await dlBlob(f.n,new Blob([u]))}catch(e){toast('Not saved')}};
+Object.assign(H,{
+ gsi:async()=>{CL.err='';CL.boot=true;render();
+  try{const f=await fbInit(),p=new f.au.GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});
+   try{await f.au.signInWithPopup(f.auth,p)}catch(e){if(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment'){await f.au.signInWithRedirect(f.auth,p);return}throw e}
+  }catch(e){CL.boot=false;CL.err=friendly(e);render()}},
+ cloud:()=>{if(!CL.u)return;const st=!navigator.onLine?'Offline. Changes are kept on this device and sync automatically when you reconnect.':CL.sync=='saving'?'Saving changes…':CL.sync=='error'?'Sync problem. Changes will retry when the connection returns.':'All changes synced'+(CL.last?' at '+new Date(CL.last).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'')+'.';
+  modal(`<h3>Your account</h3><div class="fl" style="margin-top:12px"><span><b>${esc(CL.u.displayName||'Signed in')}</b><br><small style="color:var(--mu)">${esc(CL.u.email||'')}</small></span></div><p class="sub" style="margin:14px 0 4px">${st}</p><p class="sub" style="margin:0 0 16px">Live sync is on. Changes from your other devices appear here automatically.</p><div class="r2" style="justify-content:space-between"><button class="btn gh" data-a="mx">Close</button><button class="btn dg" data-a="gso">Sign out</button></div>`)},
+ gso:async()=>{close();try{const f=CL.fb;await f.au.signOut(f.auth);await f.fs.terminate(f.db);await f.fs.clearIndexedDbPersistence(f.db)}catch(e){}location.reload()},
+ bnow:()=>{close();pushNow()},rst:()=>{close();toast('Your data syncs automatically')},keep:()=>close()
+});
+/* ===== New features: search, income statement, attendance reminder ===== */
+function fyOf(ym){const y=+ym.slice(0,4),m=+ym.slice(5,7);return m>=4?y:y-1}
+function fyLabel(y){return 'FY '+y+'-'+String(y+1).slice(2)}
+function incomeRows(){const rows={};const get=(y,r)=>{const k=y+'|'+r.id;return rows[k]||(rows[k]={fy:y,r,gross:0,ded:0,net:0,rec:0,other:0})};
+ RL().forEach(r=>{
+  monthsOf(r).forEach(ym=>{const c=calcPay(r,ym),row=get(fyOf(ym),r);if(!c.estimate){row.gross+=c.gross;row.ded+=Math.min(c.ded,c.gross);row.net+=c.net}row.rec+=c.rec});
+  (r.extra||[]).forEach(x=>{const row=get(fyOf(x.date.slice(0,7)),r);row.other+=(+x.amt||0)});
+ });
+ return Object.values(rows).sort((x,y)=>y.fy-x.fy||x.r.org.localeCompare(y.r.org))}
+function fyTotals(rows){const m={};rows.forEach(x=>{const t=m[x.fy]||(m[x.fy]={fy:x.fy,gross:0,ded:0,net:0,rec:0,other:0});t.gross+=x.gross;t.ded+=x.ded;t.net+=x.net;t.rec+=x.rec;t.other+=x.other});return Object.values(m).sort((a,b)=>b.fy-a.fy)}
+function incomeV(){const rows=incomeRows(),tot=fyTotals(rows);if(!tot.length)return '';
+ return `<div class="card" style="padding:16px"><div class="r2" style="justify-content:space-between;flex-wrap:nowrap"><b>Income statement by financial year</b><button class="btn sm gh" data-a="fyCsv">Export CSV</button></div><div class="sub" style="margin-top:4px">April to March. Gross and deductions use months with attendance marked. Received counts every payment recorded.</div>${tot.map(t=>`<div class="fl" style="margin-top:8px"><span><b>${fyLabel(t.fy)}</b><br><small style="color:var(--mu)">Gross ${inr(t.gross)} · Deductions ${inr(t.ded)} · Net ${inr(t.net)}${t.other?' · Other '+inr(t.other):''}</small></span><b>${inr(t.rec)}</b></div>`).join('')}</div>`}
+function searchAll(q){q=q.trim().toLowerCase();if(q.length<2)return[];const hit=t=>String(t||'').toLowerCase().includes(q),out=[];
+ RL().forEach(r=>{if([r.org,r.title,r.loc,r.notes,r.reason].some(hit))out.push({k:'Company',t:r.org+' · '+r.title,s:fm(r.from)+' – '+fm(r.to),a:'gorole',id:r.id});
+  AT(r).set.forEach(x=>{if([x.mode,x.note,String(x.amt)].some(hit))out.push({k:'Payment',t:r.org+' · '+mlabel(x.ym),s:inr(x.amt)+' on '+fd(x.date)+(x.note?' · '+x.note:''),a:'gorole',id:r.id})})});
+ S.jobs.forEach(j=>{if([j.name,j.board,j.regId].some(hit))out.push({k:'Job',t:j.name,s:j.board+' · '+j.status,a:'go',v:'jobs',id:j.id})});
+ S.tasks.forEach(t=>{if([t.title,t.notes,t.project].some(hit))out.push({k:'Work',t:t.title,s:fd(t.date)+' · '+t.status,a:'go',v:'work',id:t.id})});
+ return out.slice(0,30)}
+function missingAlerts(){const now=td().slice(0,7),day=+td().slice(8,10);if(day<5)return[];
+ return RL().filter(r=>!r.to&&r.from&&r.from<=now).filter(r=>!monthStats(r,now).marked).map(r=>({k:'miss'+r.id+now,ty:'ac',t:r.org,m:'No attendance marked for '+mlabel(now)+' yet',v:'att',id:r.id+'|'+now}))}
+const _attAlerts=attAlerts;attAlerts=()=>_attAlerts().concat(missingAlerts());
+const _attDash=attDash;attDash=()=>_attDash()+`<div class="card" style="padding:14px"><b>Find anything</b><input class="in" data-i="gq" placeholder="Search companies, payments, jobs, work notes…" style="margin-top:8px"><div id="gres" style="margin-top:8px"></div></div>`+incomeV();
+document.addEventListener('input',e=>{if(!e.target.dataset||e.target.dataset.i!=='gq')return;const box=document.getElementById('gres');if(!box)return;const q=e.target.value,res=searchAll(q);
+ box.innerHTML=res.length?res.map(x=>`<div class="ni" style="cursor:pointer" data-a="${x.a}" data-v="${x.v||''}" data-id="${x.id}"><span class="ch ac">${x.k}</span><div><b>${esc(x.t)}</b><div class="sub">${esc(x.s)}</div></div></div>`).join(''):(q.trim().length>1?'<div class="sub">No matches</div>':'')});
+Object.assign(H,{
+ gorole:t=>{U.view='career';U.ro=t.dataset.id;U.bell=false;render();scrollTo(0,0)},
+ fyCsv:()=>{const q=v=>`"${String(v).replace(/"/g,'""')}"`,rows=[['Financial year','Company','Designation','Type','Gross','Deductions','Net','Received','Other income']].concat(incomeRows().map(x=>[fyLabel(x.fy),x.r.org,x.r.title,x.r.type,Math.round(x.gross),Math.round(x.ded),Math.round(x.net),Math.round(x.rec),Math.round(x.other)]));save2('income-statement.csv',rows.map(r=>r.map(q).join(',')).join('\n'))}
+});
 document.addEventListener('change',e=>{const c=e.target.dataset.c;c&&C[c]&&C[c](e.target)});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,k=f.dataset.s,v=Object.fromEntries(new FormData(f));
 if(k=='pw'){CL.pw=v.pw;close();CL.next&&CL.next();return}
@@ -357,5 +472,5 @@ if(k=='at'){const t={id:uid(),title:v.title.trim(),status:v.status,date:v.date||
 if(k=='cls'){const j=J(f.dataset.id);j.status='Closed';j.remark=v.r.trim();j.alert='';logJ(j,'Closed: '+j.remark)}
 if(k=='as'){const j=J(f.dataset.id);j.stages.push(mkS(v.n.trim()));U.si[j.id]=j.stages.length-1;logJ(j,'Stage added: '+v.n)}
 save();close();render()});
-if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});if(FBCFG)fbInit().catch(()=>{});render();alertGate();
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});boot();
 </script></body></html>
