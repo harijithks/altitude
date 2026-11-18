@@ -149,6 +149,32 @@ select.ch:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
  .kcol{flex-basis:78vw;min-width:78vw}
  .sheet{padding:16px}
 }
+/* ---- Phone Work tab: cleaner stacked layout ---- */
+@media (max-width:560px){
+ .ph{flex-direction:column!important;align-items:stretch!important;gap:10px!important}
+ .ph h2{font-size:24px!important;margin:0!important;line-height:1.15}
+ .wvt{width:100%!important;display:grid!important;grid-template-columns:1fr 1fr;gap:8px;flex:none!important}
+ .wvt .btn{width:100%!important;padding:11px!important;margin:0!important}
+ .ph>.btn{width:100%!important;justify-content:center;padding:13px!important;margin:0!important}
+ .wsearch{height:48px;margin-top:12px!important}
+ .pill{gap:8px!important;margin-top:10px!important;padding-bottom:4px}
+ .pill button{padding:9px 16px!important;font-size:13px!important;flex:0 0 auto}
+ .wfilters{grid-template-columns:1fr 1fr!important;gap:10px!important;margin-top:10px!important}
+ .wfilters label:last-child{grid-column:1/-1}
+ .wf span{font-size:10px}
+ .card{margin-bottom:12px!important;border-radius:16px!important}
+ .hd{flex-wrap:wrap!important;gap:10px!important;padding:14px 14px 12px!important}
+ .hd .gr{flex:1 1 100%!important;min-width:0!important}
+ .hd .gr .nm{font-size:16px!important;white-space:normal!important;overflow-wrap:anywhere;line-height:1.3}
+ .hd .gr .sub{margin-top:4px}
+ .hd .rt{flex:1 1 100%!important;display:grid!important;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center;justify-content:stretch!important}
+ .hd .rt select{width:100%!important;min-width:0;padding:9px 10px!important;font-size:13px!important}
+ .hd .rt .cv{justify-self:end}
+ .sum{font-size:13px;margin:8px 0 12px!important}
+ .tabs{margin:12px 0!important}
+ .tabs button{padding:9px 14px!important;font-size:13px}
+ .kp{grid-template-columns:1fr 1fr!important}
+}
 </style><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -172,7 +198,7 @@ const J=id=>S.jobs.find(j=>j.id==id),T=id=>S.tasks.find(t=>t.id==id);
 function alertOf(j){if(j.status!=='Active')return '';if(j.alert)return j.alert;const d=days(j.examDate),a=j.stages.find(s=>/admit|hall/i.test(s.name));if(d!==null&&d>=0&&d<=7&&a&&!a.files.length&&a.st!=='done'&&j.ackDate!==td())return `Exam in ${d} day(s) and no hall ticket is uploaded. Download it now.`;return ''}
 function attn(){const r=[];S.jobs.filter(j=>j.status==='Active').forEach(j=>{const a=alertOf(j),d=days(j.examDate);if(a)r.push({k:'a'+j.id+(j.alert||td()),ty:'er',t:j.name,m:a,v:'jobs',id:j.id});if(d!==null&&d>=0&&d<=14)r.push({k:'d'+j.id+j.examDate,ty:'wa',t:j.name,m:`Exam on ${fd(j.examDate)} (${d} days left)`,v:'jobs',id:j.id});if((j.checked||'')<td())r.push({k:'c'+j.id+td(),ty:'ac',t:j.name,m:'Daily check due: look for admit card or notice updates',v:'jobs',id:j.id})});
 S.tasks.filter(t=>t.status==='Decision Required'&&days(t.date)<=-3).forEach(t=>r.push({k:'t'+t.id,ty:'wa',t:t.title,m:`Waiting for decision for ${-days(t.date)} days`,v:'work',id:t.id}));return r}
-const rdf=f=>new Promise((ok,no)=>{if(f.size>6e5){toast('File over 600 KB. Compress it first.');return no()}const r=new FileReader();r.onload=()=>ok({n:f.name,s:Math.round(f.size/1024)+' KB',d:r.result});r.readAsDataURL(f)});
+const rdf=f=>new Promise((ok,no)=>{if(f.size>2*1024*1024){toast('File over 2 MB. Compress it first.');return no()}const r=new FileReader();r.onload=()=>ok({n:f.name,s:Math.round(f.size/1024)+' KB',d:r.result});r.readAsDataURL(f)});
 async function dlBlob(n,b){if(window.claude){const dl=await claude.use('downloads');return dl.save({filename:n,data:b})}const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;document.body.appendChild(a);a.click();a.remove()}
 async function dlf(f){try{const s=atob(f.d.split(',')[1]),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);await dlBlob(f.n,new Blob([u]))}catch(e){toast('Not saved')}}
 function modal(h,lock){$('#modal').innerHTML=`<div class="ov" data-a="${lock?'':'mx'}"><div class="sheet">${h}</div></div>`}
@@ -628,7 +654,7 @@ function paintOT(){if(U.view!=='att'||!U.ar)return;const r=R(U.ar);if(!r)return;
   const pill=document.createElement('i');pill.className='otb';pill.textContent='+'+txt;pill.title='Overtime '+txt+(e.note?' · '+e.note:'');btn.appendChild(pill)})}
 const _render2=render;render=function(){_render2();paintOT()};
 /* ===== Version control: always run the newest build ===== */
-const APP_VER='2026-11-18.3';
+const APP_VER='2026-11-19.2';
 if('serviceWorker' in navigator){let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloaded){reloaded=true;location.reload()}})}
 H.cloud=()=>{if(!CL.u)return;const st=!navigator.onLine?'Offline. Changes are kept on this device and sync automatically when you reconnect.':CL.sync=='saving'?'Saving changes…':CL.sync=='error'?'Sync problem. Changes will retry when the connection returns.':'All changes synced'+(CL.last?' at '+new Date(CL.last).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'')+'.';
  modal(`<h3>Your account</h3><div class="fl" style="margin-top:12px"><span><b>${esc(CL.u.displayName||'Signed in')}</b><br><small style="color:var(--mu)">${esc(CL.u.email||'')}</small></span></div><p class="sub" style="margin:14px 0 4px">${st}</p><p class="sub" style="margin:0 0 6px">Live sync is on. Changes from your other devices appear here automatically.</p><p class="sub" style="margin:0 0 16px;font-size:11px">App version ${APP_VER}</p><div class="r2" style="justify-content:space-between"><button class="btn gh" data-a="mx">Close</button><button class="btn dg" data-a="gso">Sign out</button></div>`)};
@@ -764,6 +790,47 @@ Object.assign(H,{
   S.jobs.unshift({id:uid(),name:o.title.slice(0,90),board:o.source||'',fee:0,status:'Active',remark:'',regId:'',user:'',pass:'',url:o.url,examDate:'',alert:'',checked:'',upd:td(),log:[{d:td(),m:'Tracked from civil openings'}],stages:['Registration','Application','Admit Card','Written Exam','Result'].map((n,i)=>({...mkS(n),st:i==0?'current':'pending'}))});
   save();toast('Added to Job Tracker');render()}
 });
+/* ===== Version check: reload once when a new build is published ===== */
+(function(){try{const last=localStorage.getItem('altVer');
+ if(last!==APP_VER){localStorage.setItem('altVer',APP_VER);
+  if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(rs=>Promise.all(rs.map(r=>r.unregister())))
+   .then(()=>(window.caches?caches.keys().then(ks=>Promise.all(ks.map(k=>caches.delete(k)))):null))
+   .then(()=>{if(last!==null)location.reload()})}}}catch(e){}})();
+/* ===== Attachments up to 2 MB: stored in chunks ===== */
+const CHUNK=900000;
+async function pushNow(){
+ const f=CL.fb;if(!CL.u||!f)return;const me=CL.u.uid;
+ allFiles().forEach(x=>{if(x.d&&!x.fid){
+   x.fid=uid();x.parts=Math.max(1,Math.ceil(x.d.length/CHUNK));
+   f.fs.setDoc(f.fs.doc(f.db,'users',me,'files',x.fid),{n:x.n,parts:x.parts}).catch(e=>toast('Attachment upload issue: '+e.message));
+   for(let i=0;i<x.parts;i++){
+     f.fs.setDoc(f.fs.doc(f.db,'users',me,'files',x.fid+'_'+i),{d:x.d.slice(i*CHUNK,(i+1)*CHUNK)}).catch(e=>toast('Attachment upload issue: '+e.message));
+   }}});
+ const now=fidSet(),prev=CL.fids||new Set();
+ prev.forEach(id=>{if(!now.has(id)){
+   f.fs.deleteDoc(f.fs.doc(f.db,'users',me,'files',id)).catch(()=>{});
+   for(let i=0;i<8;i++)f.fs.deleteDoc(f.fs.doc(f.db,'users',me,'files',id+'_'+i)).catch(()=>{});
+ }});
+ CL.fids=now;
+ const state=JSON.stringify(S,DROPD);
+ if(state.length>950000)toast('Your data is nearly full. Export a backup and remove old attachments.');
+ CL.ts=S.ts;CL.pend=null;CL.sync='saving';
+ try{await f.fs.setDoc(f.fs.doc(f.db,'users',me,'data','main'),{state,ts:S.ts});CL.sync='saved';CL.last=Date.now()}
+ catch(e){CL.sync='error';toast('Sync problem: '+e.message)}
+}
+dlf=async f=>{try{let d=f.d;
+ if(!d&&f.fid){const fs=CL.fb.fs,db=CL.fb.db,me=CL.u.uid;
+  const meta=await fs.getDoc(fs.doc(db,'users',me,'files',f.fid));
+  if(!meta.exists()){toast('This attachment needs an internet connection');return}
+  const m=meta.data();
+  if(m.d){d=m.d}else{
+   const n=m.parts||1,pieces=[];
+   for(let i=0;i<n;i++){const c=await fs.getDoc(fs.doc(db,'users',me,'files',f.fid+'_'+i));
+     if(!c.exists()){toast('Attachment still loading. Try again in a moment');return}pieces.push(c.data().d)}
+   d=pieces.join('');
+  }}
+ const b=atob(d.split(',')[1]),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);
+ await dlBlob(f.n,new Blob([u]))}catch(e){toast('Not saved')}};
 document.addEventListener('change',e=>{const c=e.target.dataset.c;c&&C[c]&&C[c](e.target)});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,k=f.dataset.s,v=Object.fromEntries(new FormData(f));
 if(k=='pw'){CL.pw=v.pw;close();CL.next&&CL.next();return}
