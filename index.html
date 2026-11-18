@@ -105,6 +105,9 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:
 .rs-p{padding:8px 0 4px 10px;border-left:2px solid #e4e7f0;margin-top:6px;color:#0f172a}.rs-n{font-size:12px;color:#475569;margin-top:2px}
 @media print{body *{visibility:hidden!important}#modal,#modal *{visibility:visible!important}#modal{position:absolute;left:0;top:0;width:100%}#modal .ov{position:static!important;background:#fff!important;display:block!important;padding:0!important}.sheet{box-shadow:none!important;max-height:none!important;overflow:visible!important;color:#000!important;background:#fff!important;border:0!important;max-width:none!important}.no-print{display:none!important}}
 .ad .otb{display:inline-block;background:#111827;color:#fff;border-radius:6px;padding:0 4px;font-size:9px;font-weight:800;font-style:normal;line-height:14px;margin-top:2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ch.ip{background:rgba(59,130,246,.18);color:#60a5fa}
+select.ch{appearance:none;-webkit-appearance:none;cursor:pointer;border:0;padding:3px 12px;outline:none;max-width:100%}
+select.ch:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 </style><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -123,7 +126,7 @@ let S=seed();
 const save=()=>{S.ts=Date.now();schedulePush()};
 const U={view:'dash',open:null,si:{},more:{},to:null,bell:false,jt:'Active',jq:'',wt:'Ongoing',wq:'',sort:'new',per:'all',from:'',to2:''};
 const toast=m=>{const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',2600)};
-const SC={Ongoing:'ac','Decision Required':'wa',Completed:'ok'},ST=['Ongoing','Decision Required','Completed'];
+const SC={Ongoing:'ac','In progress':'ip','Decision Required':'wa',Completed:'ok'},ST=['Ongoing','In progress','Decision Required','Completed'];
 const J=id=>S.jobs.find(j=>j.id==id),T=id=>S.tasks.find(t=>t.id==id);
 function alertOf(j){if(j.status!=='Active')return '';if(j.alert)return j.alert;const d=days(j.examDate),a=j.stages.find(s=>/admit|hall/i.test(s.name));if(d!==null&&d>=0&&d<=7&&a&&!a.files.length&&a.st!=='done'&&j.ackDate!==td())return `Exam in ${d} day(s) and no hall ticket is uploaded. Download it now.`;return ''}
 function attn(){const r=[];S.jobs.filter(j=>j.status==='Active').forEach(j=>{const a=alertOf(j),d=days(j.examDate);if(a)r.push({k:'a'+j.id+(j.alert||td()),ty:'er',t:j.name,m:a,v:'jobs',id:j.id});if(d!==null&&d>=0&&d<=14)r.push({k:'d'+j.id+j.examDate,ty:'wa',t:j.name,m:`Exam on ${fd(j.examDate)} (${d} days left)`,v:'jobs',id:j.id});if((j.checked||'')<td())r.push({k:'c'+j.id+td(),ty:'ac',t:j.name,m:'Daily check due: look for admit card or notice updates',v:'jobs',id:j.id})});
@@ -597,6 +600,10 @@ async function ensureFirebase(){
  let lastErr=null;
  for(const base of FB_BASES){try{for(const f of FB_FILES)await loadScriptOnce(base+f);if(typeof firebase!=='undefined'&&firebase.auth&&firebase.firestore)return}catch(e){lastErr=e}}
  throw new Error('Google services could not be loaded'+(lastErr?' ('+lastErr.message+')':'')+'. Try another network, turn off ad or privacy blockers for this site, then reload.')}
+/* ===== Work status: change from the card, plus "In progress" ===== */
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('select'))e.stopPropagation()},true);
+function taskCard(t){const o=U.to==t.id,fileN=(t.files||[]).length,sh=(t.shares||[]).length;
+ return `<div class="card" id="t${t.id}"><div class="hd" data-a="tt" data-id="${t.id}"><div class="gr"><div class="nm">${esc(t.title)}</div><div class="sub">${fd(t.date)} · ${t.hrs}h${t.project?' · '+esc(t.project):''}${sh?` · shared ×${sh}`:''}${fileN?` · 📎${fileN}`:''}</div></div><div class="rt"><select class="ch ${SC[t.status]||''}" data-c="tst" data-id="${t.id}" aria-label="Change status" title="Change status">${ST.map(x=>`<option ${t.status==x?'selected':''}>${x}</option>`).join('')}</select><span class="cv ${o?'up':''}">${ic('chev')}</span></div></div>${o?taskBody(t):''}</div>`}
 document.addEventListener('change',e=>{const c=e.target.dataset.c;c&&C[c]&&C[c](e.target)});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,k=f.dataset.s,v=Object.fromEntries(new FormData(f));
 if(k=='pw'){CL.pw=v.pw;close();CL.next&&CL.next();return}
