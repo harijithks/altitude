@@ -108,6 +108,22 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:
 .ch.ip{background:rgba(59,130,246,.18);color:#60a5fa}
 select.ch{appearance:none;-webkit-appearance:none;cursor:pointer;border:0;padding:3px 12px;outline:none;max-width:100%}
 select.ch:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.kb{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 12px;align-items:stretch}
+.kcol{flex:0 0 252px;min-width:252px;background:var(--in);border:1px solid var(--bd);border-radius:14px;padding:10px;display:flex;flex-direction:column;max-height:74vh}
+.kh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:2px 2px 8px;border-bottom:3px solid var(--bd)}
+.kcol[data-col="Overdue"] .kh{border-color:#dc2626}.kcol[data-col="Pending"] .kh{border-color:#94a3b8}.kcol[data-col="Today"] .kh{border-color:#db2777}
+.kcol[data-col="Tomorrow"] .kh{border-color:#0ea5e9}.kcol[data-col="This week"] .kh{border-color:#f59e0b}.kcol[data-col="Next week"] .kh{border-color:#10b981}
+.kcol[data-col="This month"] .kh{border-color:#8b5cf6}.kcol[data-col="Later"] .kh{border-color:#64748b}
+.kn{background:var(--cd);border:1px solid var(--bd);border-radius:99px;padding:0 9px;font-size:12px;font-weight:700}
+.kdrop{flex:1;overflow-y:auto;min-height:90px;display:flex;flex-direction:column;gap:8px;border-radius:10px;padding:2px}
+.kdrop.kover{background:rgba(79,70,229,.12);outline:2px dashed var(--ac)}
+.kcard{background:var(--cd);border:1px solid var(--bd);border-radius:12px;padding:10px;cursor:grab;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.kcard.kdrag{opacity:.5}
+.kt{font-weight:700;font-size:13px;line-height:1.3;margin-bottom:6px;overflow-wrap:anywhere}
+.kmeta{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.kmove{width:100%;font-size:12px;padding:6px;border-radius:8px;border:1px solid var(--bd);background:var(--cd);color:var(--tx)}
+.kempty{font-size:12px;color:var(--mu);text-align:center;padding:14px;border:2px dashed var(--bd);border-radius:10px}
+.kcard,.kmove{min-width:0}
 </style><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -165,7 +181,7 @@ ${s.files.map((f,i)=>`<div class="fl"><span>📎 ${esc(f.n)} · ${f.s}</span><bu
 <label class="up">${ic('dl',16)} Upload hall ticket, receipt or PDF<input type="file" hidden data-c="sf" data-id="${j.id}" data-n="${si}"></label></div>`:''}
 <button class="lnk" data-a="mr" data-id="${j.id}">${U.more[j.id]?'Hide':'More'} details</button>${U.more[j.id]?`<div class="g2">${fld(j,'regId','Registration ID')}${fld(j,'user','Username')}
 <div><label class="l">Password</label><div class="r2" style="flex-wrap:nowrap"><input class="in" type="password" value="${esc(j.pass)}" data-c="jf" data-id="${j.id}" data-k="pass" autocomplete="off"><button class="ic" data-a="eye">${ic('eye',16)}</button><button class="ic" data-a="cp">${ic('copy',16)}</button></div></div>${fld(j,'url','Portal URL','url')}${fld(j,'fee','Application fee (₹)','number')}${fld(j,'examDate','Exam date','date')}</div>
-<div class="r2" style="margin-top:12px"><button class="btn sm" data-a="chk" data-id="${j.id}">${ic('ext',14)} Check for updates</button><button class="btn sm gh" data-a="adm" data-id="${j.id}">Admit card released</button>${j.url?`<a class="btn sm gh" href="${esc(j.url)}" target="_blank" rel="noreferrer">Open portal</a>`:''}<button class="btn sm gh" data-a="dj" data-id="${j.id}" style="color:var(--er)">Delete</button></div>
+<div class="r2" style="margin-top:12px"><button class="btn sm" data-a="chk" data-id="${j.id}">${ic('ext',14)} Check for updates</button><button class="btn sm gh" data-a="adm" data-id="${j.id}">${j.admitRel?'Undo admit card release':'Admit card released'}</button>${j.url?`<a class="btn sm gh" href="${esc(j.url)}" target="_blank" rel="noreferrer">Open portal</a>`:''}<button class="btn sm gh" data-a="dj" data-id="${j.id}" style="color:var(--er)">Delete</button></div>
 <label class="l">Activity</label>${j.log.slice(-5).reverse().map(l=>`<div class="sub">${fd(l.d)} · ${esc(l.m)}</div>`).join('')}`:''}</div>`}
 function workV(){return `<div class="ph"><h2>Work Register</h2><button class="btn" data-a="at">${ic('plus',16)} Log task</button></div><input class="in" placeholder="Search title, notes, people, project" value="${esc(U.wq)}" data-i="wq">
 <div class="pill">${[['all','All dates'],['today','Today'],['week','Last 7 days'],['month','This month']].map(([v,l])=>`<button class="${U.per==v?'on':''}" data-a="per" data-v="${v}">${l}</button>`).join('')}</div>
@@ -604,6 +620,72 @@ async function ensureFirebase(){
 document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('select'))e.stopPropagation()},true);
 function taskCard(t){const o=U.to==t.id,fileN=(t.files||[]).length,sh=(t.shares||[]).length;
  return `<div class="card" id="t${t.id}"><div class="hd" data-a="tt" data-id="${t.id}"><div class="gr"><div class="nm">${esc(t.title)}</div><div class="sub">${fd(t.date)} · ${t.hrs}h${t.project?' · '+esc(t.project):''}${sh?` · shared ×${sh}`:''}${fileN?` · 📎${fileN}`:''}</div></div><div class="rt"><select class="ch ${SC[t.status]||''}" data-c="tst" data-id="${t.id}" aria-label="Change status" title="Change status">${ST.map(x=>`<option ${t.status==x?'selected':''}>${x}</option>`).join('')}</select><span class="cv ${o?'up':''}">${ic('chev')}</span></div></div>${o?taskBody(t):''}</div>`}
+/* ===== Work: importance levels, due dates, and the Kanban board ===== */
+const PRI=[['Critical','#dc2626'],['High','#f97316'],['Medium','#3b82f6'],['Low','#94a3b8']];
+const priC=p=>(PRI.find(x=>x[0]===p)||PRI[2])[1];
+const COLS=['Overdue','Pending','Today','Tomorrow','This week','Next week','This month','Later'];
+let _wvMode='list';
+function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function addDays(n){const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()+n);return ymd(d)}
+function weekEnd(extra){const d=new Date();d.setHours(12,0,0,0);const toSun=(7-d.getDay())%7;d.setDate(d.getDate()+toSun+7*extra);return ymd(d)}
+function monthEnd(extra){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+1+extra);d.setDate(0);return ymd(d)}
+function colOf(t){if(!t.due)return'Pending';const today=td(),tm=addDays(1),we=weekEnd(0),nw=weekEnd(1),me=monthEnd(0);
+ if(t.due<today)return'Overdue';if(t.due===today)return'Today';if(t.due===tm)return'Tomorrow';if(t.due<=we)return'This week';if(t.due<=nw)return'Next week';if(t.due<=me)return'This month';return'Later'}
+function dueFor(col){switch(col){case'Today':return td();case'Tomorrow':return addDays(1);case'This week':return weekEnd(0);case'Next week':return weekEnd(1);case'This month':return monthEnd(0);case'Later':return monthEnd(1);case'Pending':return'';default:return null}}
+function moveTask(id,col){const t=T(id);if(!t)return;if(col==='Overdue'){toast('Overdue is automatic. Move the card to a date column instead.');return}
+ const d=dueFor(col);if(d===null)return;if(t.due===d){return}t.due=d;save();toast(d?'Moved to '+col+' · due '+fd(d):'Moved to Pending (no date)');render()}
+function boardCard(t){const p=t.pri||'Medium',cur=colOf(t);
+ return `<div class="kcard" draggable="true" data-tid="${t.id}" style="border-left:4px solid ${priC(p)}"><div class="kt">${esc(t.title)}</div><div class="kmeta"><span class="ch" style="background:${priC(p)}22;color:${priC(p)}">${p}</span><span class="sub">${t.due?fd(t.due):'No date'} · ${t.hrs||0}h</span></div><select class="kmove" data-c="tmove" data-id="${t.id}" aria-label="Move to column">${COLS.map(c=>`<option value="${c}" ${cur===c?'selected':''} ${c==='Overdue'&&cur!=='Overdue'?'disabled':''}>${c==='Pending'?'Pending (no date)':c}</option>`).join('')}</select></div>`}
+function boardPage(){const open=S.tasks.filter(t=>t.status!=='Completed');
+ const cols=COLS.map(c=>({c,items:open.filter(t=>colOf(t)===c).sort((a,b)=>PRI.findIndex(x=>x[0]===(a.pri||'Medium'))-PRI.findIndex(x=>x[0]===(b.pri||'Medium'))||String(a.due||'').localeCompare(String(b.due||'')))}));
+ return `<div class="ph"><h2>Work Register</h2><button class="btn" data-a="at">${ic('plus',16)} Log task</button></div>
+<div class="sub" style="margin:-4px 0 12px">Drag a card to another column to change its target completion date. On phones, use the Move menu on each card. Completed tasks are in List view.</div>
+<div class="kb">${cols.map(x=>`<div class="kcol" data-col="${x.c}"><div class="kh"><b>${x.c}</b><span class="kn">${x.items.length}</span></div><div class="kdrop" data-drop="${x.c}">${x.items.map(boardCard).join('')||'<div class="kempty">Drop here</div>'}</div></div>`).join('')}</div>`}
+const _workV=workV;workV=()=>_wvMode==='board'?boardPage():_workV();
+function taskCard(t){const o=U.to==t.id,fileN=(t.files||[]).length,sh=(t.shares||[]).length,p=t.pri||'Medium';
+ return `<div class="card" id="t${t.id}" style="border-left:5px solid ${priC(p)}"><div class="hd" data-a="tt" data-id="${t.id}"><div class="gr"><div class="nm">${esc(t.title)}</div><div class="sub">${fd(t.date)} · ${t.hrs}h${t.due?' · due '+fd(t.due):''}${t.project?' · '+esc(t.project):''}${sh?` · shared ×${sh}`:''}${fileN?` · 📎${fileN}`:''}</div></div><div class="rt"><select class="ch" style="background:${priC(p)}22;color:${priC(p)}" data-c="tpri" data-id="${t.id}" aria-label="Importance" title="Importance">${PRI.map(x=>`<option ${p===x[0]?'selected':''}>${x[0]}</option>`).join('')}</select><select class="ch ${SC[t.status]||''}" data-c="tst" data-id="${t.id}" aria-label="Change status">${ST.map(x=>`<option ${t.status==x?'selected':''}>${x}</option>`).join('')}</select><span class="cv ${o?'up':''}">${ic('chev')}</span></div></div>${o?taskBody(t)+`<div style="margin-top:12px"><label class="l" style="margin-top:0">Target completion date</label><input class="in" type="date" value="${t.due||''}" data-c="tdue" data-id="${t.id}"></div>`:''}</div>`}
+Object.assign(C,{
+ tmove:t=>moveTask(t.dataset.id,t.value),
+ tpri:t=>{const o=T(t.dataset.id);o.pri=t.value;save();render()},
+ tdue:t=>{const o=T(t.dataset.id);o.due=t.value;save();render()}
+});
+Object.assign(H,{
+ wvl:()=>{_wvMode='list';render()},
+ wvb:()=>{_wvMode='board';render()}
+});
+function paintWorkToggle(){if(U.view!=='work')return;
+ const ph=[...document.querySelectorAll('.ph')].find(p=>{const h=p.querySelector('h2');return h&&h.textContent.includes('Work Register')});
+ if(!ph||ph.querySelector('.wvt'))return;
+ const bar=document.createElement('div');bar.className='r2 wvt';bar.style.flex='none';
+ bar.innerHTML=`<button class="btn sm ${_wvMode==='list'?'':'gh'}" data-a="wvl">List</button><button class="btn sm ${_wvMode==='board'?'':'gh'}" data-a="wvb">Board</button>`;
+ ph.insertBefore(bar,ph.lastElementChild)}
+const _render4=render;render=function(){_render4();paintWorkToggle()};
+document.addEventListener('dragstart',e=>{const c=e.target.closest&&e.target.closest('.kcard');if(!c)return;e.dataTransfer.setData('text/plain',c.dataset.tid);e.dataTransfer.effectAllowed='move';c.classList.add('kdrag')});
+document.addEventListener('dragend',e=>{const c=e.target.closest&&e.target.closest('.kcard');if(c)c.classList.remove('kdrag');document.querySelectorAll('.kdrop.kover').forEach(x=>x.classList.remove('kover'))});
+document.addEventListener('dragover',e=>{const d=e.target.closest&&e.target.closest('.kdrop');if(d){e.preventDefault();d.classList.add('kover')}});
+document.addEventListener('dragleave',e=>{const d=e.target.closest&&e.target.closest('.kdrop');if(d&&!d.contains(e.relatedTarget))d.classList.remove('kover')});
+document.addEventListener('drop',e=>{const d=e.target.closest&&e.target.closest('.kdrop');if(!d)return;e.preventDefault();d.classList.remove('kover');moveTask(e.dataTransfer.getData('text/plain'),d.dataset.drop)});
+function priorityCard(){const open=S.tasks.filter(t=>t.status!=='Completed');
+ return `<div class="card" style="padding:14px"><b>Open tasks by importance</b><div class="kp" style="margin-top:10px">${PRI.map(([n,c])=>`<div class="card" style="padding:12px;border-top:4px solid ${c};margin:0"><small>${n}</small><b>${open.filter(t=>(t.pri||'Medium')===n).length}</b></div>`).join('')}</div></div>`}
+const _ad4=attDash;attDash=()=>_ad4()+priorityCard();
+/* ===== Admit card undo, and update search with notifications ===== */
+H.adm=t=>{const j=J(t.dataset.id);if(!j)return;
+ if(j.admitRel){j.admitRel=false;j.alert='';delete j.ackDate;logJ(j,'Admit card marked not released');toast('Admit card status reverted')}
+ else{j.admitRel=true;j.alert='Admit card released. Download it and upload the hall ticket.';logJ(j,'Admit card marked released');toast('Admit card marked released')}
+ save();render()};
+let UL=[];
+function updAlerts(){return (S.updates||[]).filter(u=>!S.read.includes('upd'+u.id)).map(u=>({k:'upd'+u.id,ty:'ok',t:u.title,m:u.text,v:u.kind==='jobs'?'jobs':'work',id:u.ref}))}
+const _attn3=attn;attn=()=>[..._attn3(),...updAlerts()];
+function updatesCard(){const list=(S.updates||[]).slice(0,5);
+ return `<div class="card" style="padding:14px"><div class="r2" style="justify-content:space-between;flex-wrap:nowrap"><b>Updates found</b><button class="btn sm" data-a="uscan">Check updates</button></div>${list.length?list.map(u=>`<div class="ni" style="padding:9px 0"><span class="ch ${u.read?'':'ok'}">●</span><div><b>${esc(u.title)}</b><div class="sub">${esc(u.text)} · ${fd(u.date)}${u.link?` · <a href="${esc(u.link)}" target="_blank" rel="noreferrer" style="color:var(--ac)">open</a>`:''}</div></div></div>`).join(''):'<div class="sub" style="margin-top:8px">No updates logged yet. Tap Check updates, search each application or work item, then log what you find.</div>'}</div>`}
+const _ad5=attDash;attDash=()=>_ad5()+updatesCard();
+Object.assign(H,{
+ uscan:()=>{const jobs=S.jobs.filter(j=>j.status==='Active'),tasks=S.tasks.filter(t=>t.status!=='Completed');
+  const q=x=>'https://www.google.com/search?q='+encodeURIComponent(x);
+  UL=[...jobs.map(j=>({kind:'jobs',id:j.id,t:j.name,s:j.name+' '+j.board+' '+new Date().getFullYear()+' notification admit card'})),...tasks.map(t=>({kind:'work',id:t.id,t:t.title,s:t.title+(t.project?' '+t.project:'')+' update'}))];
+  modal(`<h3>Check updates</h3><p class="sub">Search each active application and open work item, then log anything new. Logged updates appear in the bell.</p>${UL.length?UL.map((x,i)=>`<div class="fl"><span><b>${esc(x.t)}</b><br><small style="color:var(--mu)">${x.kind==='jobs'?'Application':'Work'}</small></span><a class="ic" href="${q(x.s)}" target="_blank" rel="noreferrer" aria-label="Search">${ic('ext',15)}</a><button class="ic" data-a="ulog" data-m="${i}" aria-label="Log update">${ic('plus',15)}</button></div>`).join(''):'<div class="sub">No active applications or open work items.</div>'}<p class="sub" style="margin-top:12px">For automatic emails when new results appear, create a free Google Alert for each search at google.com/alerts.</p><div class="r2" style="justify-content:flex-end;margin-top:12px"><button class="btn gh" data-a="mx">Close</button></div>`)},
+ ulog:t=>{const x=UL[+t.dataset.m];if(!x)return;modal(`<h3>Log update</h3><p class="sub">${esc(x.t)}</p><form data-s="upd" data-id="${x.id}" data-k="${x.kind}"><label class="l">What did you find? *</label><textarea class="in" name="text" rows="3" required placeholder="e.g. Admit card released on the official site"></textarea><label class="l">Link (optional)</label><input class="in" name="link" placeholder="https://"><div class="r2" style="justify-content:flex-end;margin-top:14px"><button type="button" class="btn gh" data-a="mx">Cancel</button><button class="btn">Save update</button></div></form>`)}
+});
 document.addEventListener('change',e=>{const c=e.target.dataset.c;c&&C[c]&&C[c](e.target)});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,k=f.dataset.s,v=Object.fromEntries(new FormData(f));
 if(k=='pw'){CL.pw=v.pw;close();CL.next&&CL.next();return}
@@ -619,6 +701,9 @@ if(k=='ot'){const r=R(f.dataset.id),h=+v.hours;if(!v.date||!(h>0)||h>24)return t
  if(ex){if(+ex.hours+h>24)return toast('That day would exceed 24 hours');ex.hours=+ex.hours+h;if((v.note||'').trim())ex.note=(ex.note?ex.note+'; ':'')+v.note.trim()}
  else a.ot.push({id:uid(),date:v.date,hours:h,note:(v.note||'').trim()});U.ar=r.id;U.am=v.date.slice(0,7);toast('Overtime logged')}
 if(k=='otcfg'){const r=R(f.dataset.id),a=AT(r);a.otCfg={mode:v.mode==='flat'?'flat':'hourly',rate:+v.rate||0,threshold:+v.threshold||0,flat:+v.flat||0,minH:+v.minH||0};U.ar=r.id;toast('Overtime rules saved')}
+if(k=='upd'){if(!(v.text||'').trim())return toast('Enter what you found');const isJ=f.dataset.k==='jobs',src=isJ?J(f.dataset.id):T(f.dataset.id);
+ S.updates=S.updates||[];S.updates.unshift({id:uid(),kind:f.dataset.k,ref:f.dataset.id,title:(src&&(src.name||src.title))||'Update',text:v.text.trim(),link:(v.link||'').trim(),date:td()});
+ if(isJ&&src)logJ(src,'Update found: '+v.text.trim().slice(0,60));toast('Update saved to notifications')}
 if(k=='rl'){if(!v.from)return toast('Choose the start month and year');const r={id:uid(),org:v.org.trim(),title:v.title.trim(),type:v.type,loc:v.loc,from:v.from,to:v.to,reason:'',notes:'',pay:v.amt?[{id:uid(),from:v.from,amt:+v.amt}]:[],extra:[],files:[]};RL().push(r);U.ro=r.id;U.view='career'}
 if(k=='ed'){const e={id:uid(),name:v.name.trim(),org:v.org,year:v.year,files:[]};if(v.file&&v.file.size){try{e.files.push(await rdf(v.file))}catch(x){return}}ED().push(e);U.view='career'}
 if(k=='aj'){U.view='jobs';const n=v.stages.split(',').map(s=>s.trim()).filter(Boolean),j={id:uid(),name:v.name.trim(),board:v.board.trim(),fee:+v.fee||0,status:'Active',remark:'',regId:v.regId,user:'',pass:v.pass,url:v.url&&!/^https?:/.test(v.url)?'https://'+v.url:v.url,examDate:v.examDate,alert:'',checked:'',upd:td(),log:[{d:td(),m:'Application created'}],stages:(n.length?n:['Registration','Admit Card','Exam','Result']).map((x,i)=>({...mkS(x),st:i==0?'done':i==1?'current':'pending',date:i==0?td():''}))};S.jobs.unshift(j);U.open=j.id;U.jt='Active';}
