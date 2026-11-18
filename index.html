@@ -124,6 +124,31 @@ select.ch:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 .kmove{width:100%;font-size:12px;padding:6px;border-radius:8px;border:1px solid var(--bd);background:var(--cd);color:var(--tx)}
 .kempty{font-size:12px;color:var(--mu);text-align:center;padding:14px;border:2px dashed var(--bd);border-radius:10px}
 .kcard,.kmove{min-width:0}
+.kgrip{touch-action:none;cursor:grab;color:var(--mu);font-size:15px;user-select:none;padding:0 4px 0 0}
+.kghost{position:fixed;pointer-events:none;z-index:200;opacity:.93;box-shadow:0 18px 40px rgba(15,23,42,.35);transform:rotate(2deg);border-radius:12px}
+.kcard.kdrag{opacity:.35}
+.kcol.kover{outline:2px dashed var(--ac);outline-offset:-2px;background:rgba(79,70,229,.10)}
+.wfilters{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.wf{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.04em;min-width:0}
+.wf .in{width:100%}
+.wsearch{margin-top:10px}
+.pill{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.ph{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+@media(max-width:560px){
+ .wrap{padding:12px 10px 110px}
+ .ph h2{width:100%;font-size:21px;margin:0}
+ .ph .btn{padding:9px 14px;white-space:nowrap;margin-left:auto}
+ .hd{flex-wrap:wrap;padding:12px}
+ .hd .gr{flex:1 1 100%}
+ .hd .rt{flex:1 1 100%;justify-content:flex-start;padding-top:2px}
+ .card .nm{font-size:15px;line-height:1.3}
+ .wfilters{grid-template-columns:1fr 1fr}
+ .wfilters label:last-child{grid-column:1/-1}
+ .kp{grid-template-columns:1fr 1fr;gap:8px}
+ .kp b{font-size:20px}
+ .kcol{flex-basis:78vw;min-width:78vw}
+ .sheet{padding:16px}
+}
 </style><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -685,6 +710,59 @@ Object.assign(H,{
   UL=[...jobs.map(j=>({kind:'jobs',id:j.id,t:j.name,s:j.name+' '+j.board+' '+new Date().getFullYear()+' notification admit card'})),...tasks.map(t=>({kind:'work',id:t.id,t:t.title,s:t.title+(t.project?' '+t.project:'')+' update'}))];
   modal(`<h3>Check updates</h3><p class="sub">Search each active application and open work item, then log anything new. Logged updates appear in the bell.</p>${UL.length?UL.map((x,i)=>`<div class="fl"><span><b>${esc(x.t)}</b><br><small style="color:var(--mu)">${x.kind==='jobs'?'Application':'Work'}</small></span><a class="ic" href="${q(x.s)}" target="_blank" rel="noreferrer" aria-label="Search">${ic('ext',15)}</a><button class="ic" data-a="ulog" data-m="${i}" aria-label="Log update">${ic('plus',15)}</button></div>`).join(''):'<div class="sub">No active applications or open work items.</div>'}<p class="sub" style="margin-top:12px">For automatic emails when new results appear, create a free Google Alert for each search at google.com/alerts.</p><div class="r2" style="justify-content:flex-end;margin-top:12px"><button class="btn gh" data-a="mx">Close</button></div>`)},
  ulog:t=>{const x=UL[+t.dataset.m];if(!x)return;modal(`<h3>Log update</h3><p class="sub">${esc(x.t)}</p><form data-s="upd" data-id="${x.id}" data-k="${x.kind}"><label class="l">What did you find? *</label><textarea class="in" name="text" rows="3" required placeholder="e.g. Admit card released on the official site"></textarea><label class="l">Link (optional)</label><input class="in" name="link" placeholder="https://"><div class="r2" style="justify-content:flex-end;margin-top:14px"><button type="button" class="btn gh" data-a="mx">Cancel</button><button class="btn">Save update</button></div></form>`)}
+});
+/* ===== Mobile workflow and board: grab-handle drag, 70% drop rule, cleaner work list ===== */
+function boardCard(t){const p=t.pri||'Medium',cur=colOf(t);
+ return `<div class="kcard" data-tid="${t.id}" style="border-left:4px solid ${priC(p)}"><div class="kt"><span class="kgrip" title="Drag to move" aria-label="Drag handle">⠿</span>${esc(t.title)}</div><div class="kmeta"><span class="ch" style="background:${priC(p)}22;color:${priC(p)}">${p}</span><span class="sub">${t.due?fd(t.due):'No date'} · ${t.hrs||0}h</span></div><select class="kmove" data-c="tmove" data-id="${t.id}" aria-label="Move to column">${COLS.map(c=>`<option value="${c}" ${cur===c?'selected':''} ${c==='Overdue'&&cur!=='Overdue'?'disabled':''}>${c==='Pending'?'Pending (no date)':c}</option>`).join('')}</select></div>`}
+function bestCol(gr){const area=Math.max(1,gr.width*gr.height);let best=null,bestR=0;
+ document.querySelectorAll('.kcol[data-col]').forEach(c=>{const col=c.dataset.col;if(col==='Overdue')return;const r=c.getBoundingClientRect();
+  const w=Math.min(gr.right,r.right)-Math.max(gr.left,r.left),h=Math.min(gr.bottom,r.bottom)-Math.max(gr.top,r.top);
+  if(w<=0||h<=0)return;const ratio=(w*h)/area;if(ratio>bestR){bestR=ratio;best=col}});
+ return bestR>=0.7?best:null}
+let PD=null;
+document.addEventListener('pointerdown',e=>{const h=e.target.closest&&e.target.closest('.kgrip');if(!h)return;const card=h.closest('.kcard');if(!card)return;
+ const r=card.getBoundingClientRect();PD={id:card.dataset.tid,card,ghost:null,ox:e.clientX-r.left,oy:e.clientY-r.top,w:r.width,pid:e.pointerId,hl:null};
+ try{h.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()},{passive:false});
+document.addEventListener('pointermove',e=>{if(!PD||e.pointerId!==PD.pid)return;
+ if(!PD.ghost){const g=PD.card.cloneNode(true);g.classList.add('kghost');g.style.width=PD.w+'px';document.body.appendChild(g);PD.ghost=g;PD.card.classList.add('kdrag')}
+ PD.ghost.style.left=(e.clientX-PD.ox)+'px';PD.ghost.style.top=(e.clientY-PD.oy)+'px';
+ const hl=bestCol(PD.ghost.getBoundingClientRect());
+ if(hl!==PD.hl){PD.hl=hl;document.querySelectorAll('.kcol').forEach(c=>c.classList.toggle('kover',c.dataset.col===hl))}});
+function endPD(e){if(!PD||e.pointerId!==PD.pid)return;const hl=PD.hl,id=PD.id,had=!!PD.ghost;
+ if(PD.ghost)PD.ghost.remove();PD.card.classList.remove('kdrag');PD=null;
+ document.querySelectorAll('.kcol.kover').forEach(c=>c.classList.remove('kover'));
+ if(had&&hl)moveTask(id,hl)}
+document.addEventListener('pointerup',endPD);document.addEventListener('pointercancel',endPD);
+function workV(){if(_wvMode==='board')return boardPage();
+ return `<div class="ph"><h2>Work Register</h2><button class="btn" data-a="at">${ic('plus',16)} Log task</button></div>
+<input class="in wsearch" placeholder="Search title, notes, people, project" value="${esc(U.wq)}" data-i="wq">
+<div class="pill">${[['all','All'],['today','Today'],['week','7 days'],['month','Month']].map(([v,l])=>`<button class="${U.per==v?'on':''}" data-a="per" data-v="${v}">${l}</button>`).join('')}</div>
+<div class="wfilters"><label class="wf"><span>From</span><input class="in" type="date" value="${U.from}" data-c="from"></label><label class="wf"><span>To</span><input class="in" type="date" value="${U.to2}" data-c="to2"></label><label class="wf"><span>Sort</span><select class="in" data-c="sort">${[['new','Newest'],['old','Oldest'],['time','Most time']].map(([v,l])=>`<option value="${v}" ${U.sort==v?'selected':''}>${l}</option>`).join('')}</select></label></div>
+<div id="wl">${workList()}</div>`}
+/* ===== Automatic web watch: setup helper ===== */
+function watchJSON(){return JSON.stringify(S.jobs.filter(j=>j.status==='Active').map(j=>({name:j.name+(j.board?' ('+j.board+')':''),urls:j.url?[j.url]:[],queries:[j.name+' '+(j.board||'')+' '+new Date().getFullYear()+' admit card exam date notification'.replace(/\s+/g,' ')]})),null,1)}
+function autoCard(){return `<div class="card" style="padding:14px"><div class="r2" style="justify-content:space-between;flex-wrap:nowrap"><div style="min-width:0"><b>Automatic job alerts</b><div class="sub">Checks your application pages and web every 6 hours and pushes a phone alert for admit cards, exam dates, next stages and interview schedules.</div></div><button class="btn sm" data-a="autosetup">Set up</button></div></div>`}
+const _ad6=attDash;attDash=()=>_ad6()+autoCard();
+Object.assign(H,{
+ autosetup:()=>{const json=watchJSON();modal(`<h3>Automatic job alerts</h3><p class="sub">Altitude runs a free scheduled check every 6 hours on GitHub. It reads each application's official page and searches the web, then sends a push notification to your phone when something new appears.</p>
+<ol class="sub" style="line-height:1.8;padding-left:18px"><li>Install the free <b>ntfy</b> app on your phone and subscribe to a private topic only you know, for example <b>altitude-yourname-7x2k</b>.</li><li>On GitHub, open the <b>altitude</b> repository, then Settings, Secrets and variables, Actions. Add a secret named <b>NTFY_TOPIC</b> with that topic name.</li><li>Add a second secret named <b>JOBS_JSON</b> and paste the watch list below.</li><li>Upload the <b>watch</b> folder and the <b>.github/workflows/watch.yml</b> file from the repo-additions folder. Then open the Actions tab and run <b>Altitude job watch</b> once.</li></ol>
+<label class="l">Your watch list (paste into JOBS_JSON)</label><textarea id="wjson" class="in" rows="7" readonly style="font-family:monospace;font-size:12px">${esc(json)}</textarea>
+<div class="r2" style="justify-content:flex-end;margin-top:12px"><button class="btn gh" data-a="mx">Close</button><button class="btn" data-a="wlcopy">Copy list</button></div>`)},
+ wlcopy:()=>{const t=document.getElementById('wjson');t.focus();t.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}toast(ok?'Watch list copied':'Select the text and copy it')}
+});
+/* ===== Civil engineering openings: list from the watcher, track in one tap ===== */
+let OPEN=null,OPEN_ERR='';
+function openingsCard(){const list=OPEN||[];
+ return `<div class="card" style="padding:14px"><div class="r2" style="justify-content:space-between;flex-wrap:nowrap"><div style="min-width:0"><b>Civil engineering openings</b><div class="sub">Found by the automatic watch from official sites and web search.</div></div><button class="btn sm" data-a="openload">${OPEN?'Refresh':'Load'}</button></div>
+ ${OPEN_ERR?`<div class="sub" style="margin-top:8px;color:var(--er)">${esc(OPEN_ERR)}</div>`:''}
+ ${OPEN===null?'':list.length?list.slice(0,12).map((o,i)=>`<div class="fl" style="margin-top:8px"><span><b>${esc(o.title)}</b><br><small style="color:var(--mu)">${esc(o.source||'')}${o.found?' · found '+fd(o.found):''}</small></span><a class="ic" href="${esc(o.url)}" target="_blank" rel="noreferrer" aria-label="Open notice">${ic('ext',15)}</a><button class="ic" data-a="optrack" data-m="${i}" aria-label="Track" title="Track as application">${ic('plus',15)}</button></div>`).join(''):'<div class="sub" style="margin-top:8px">No civil openings found yet. The watch checks every 6 hours.</div>'}</div>`}
+const _ad7=attDash;attDash=()=>_ad7()+openingsCard();
+Object.assign(H,{
+ openload:async()=>{OPEN_ERR='';try{const r=await fetch('https://raw.githubusercontent.com/harijithks/altitude/main/watch/openings.json',{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);OPEN=await r.json();if(!Array.isArray(OPEN))OPEN=[]}catch(e){OPEN=OPEN||[];OPEN_ERR='Could not load openings. Check your connection or set up the watch first.'}render()},
+ optrack:t=>{const o=(OPEN||[])[+t.dataset.m];if(!o)return;
+  if(S.jobs.some(j=>j.url===o.url||j.name===o.title)){toast('Already tracked');return}
+  S.jobs.unshift({id:uid(),name:o.title.slice(0,90),board:o.source||'',fee:0,status:'Active',remark:'',regId:'',user:'',pass:'',url:o.url,examDate:'',alert:'',checked:'',upd:td(),log:[{d:td(),m:'Tracked from civil openings'}],stages:['Registration','Application','Admit Card','Written Exam','Result'].map((n,i)=>({...mkS(n),st:i==0?'current':'pending'}))});
+  save();toast('Added to Job Tracker');render()}
 });
 document.addEventListener('change',e=>{const c=e.target.dataset.c;c&&C[c]&&C[c](e.target)});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,k=f.dataset.s,v=Object.fromEntries(new FormData(f));
