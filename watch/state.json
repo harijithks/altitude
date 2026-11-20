@@ -1,0 +1,56 @@
+{
+ "_openings_seen": {
+  "1d97b9ed3518": "COMBINED CIVIL SERVICES EXAMINATION IV (GROUP IV SERVICES) \u2013 NOTIFICATION NO. 01",
+  "ef4cdb3eed71": "COMBINED CIVIL SERVICES EXAMINATION - IV (GROUP IV SERVICES) (Notification)"
+ },
+ "dd2e13d378b5": {
+  "pages": {
+   "https://gate.iitm.ac.in": {
+    "labels": [
+     "Admit card released",
+     "Deadline or correction window",
+     "Result or answer key"
+    ]
+   }
+  },
+  "seen": {},
+  "seeded": true
+ },
+ "6e7d9aa22bbd": {
+  "pages": {
+   "https://www.freejobalert.com/engineering-jobs/": {
+    "labels": [
+     "Admit card released",
+     "Deadline or correction window",
+     "Exam date announced",
+     "Interview or document verification",
+     "Result or answer key"
+    ]
+   },
+   "https://www.civilgyantests.com/job-alerts": {
+    "labels": [
+     "Deadline or correction window"
+    ]
+   }
+  },
+  "seen": {},
+  "seeded": true
+ },
+ "d80332644e21": {
+  "pages": {},
+  "seen": {},
+  "seeded": true
+ },
+ "1fdcd1f08e90": {
+  "pages": {
+   "https://www.larsentoubro.com/corporate/careers/": {
+    "labels": []
+   },
+   "https://www.tataprojects.com/careers": {
+    "labels": []
+   }
+  },
+  "seen": {},
+  "seeded": true
+ }
+}
