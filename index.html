@@ -177,6 +177,14 @@ select.ch:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 }
 input[type=date]{position:relative;cursor:pointer}
 input[type=date]::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.wstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+.wstat{background:var(--cd);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;min-width:0;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.wstat small{display:block;color:var(--mu);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.wstat b{display:block;font-size:22px;margin-top:4px}
+.kadd{width:30px;height:30px;border-radius:10px;border:1px solid var(--bd);background:var(--cd);color:var(--ac);font-size:18px;font-weight:800;display:grid;place-items:center;cursor:pointer;padding:0}
+.kadd:disabled{opacity:.3;cursor:not-allowed}
+button.kempty{width:100%;background:none;color:var(--ac);font-weight:700;cursor:pointer}
+@media(max-width:560px){.wstats{grid-template-columns:1fr 1fr;gap:8px}.wstat b{font-size:19px}}
 </style><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -656,7 +664,7 @@ function paintOT(){if(U.view!=='att'||!U.ar)return;const r=R(U.ar);if(!r)return;
   const pill=document.createElement('i');pill.className='otb';pill.textContent='+'+txt;pill.title='Overtime '+txt+(e.note?' · '+e.note:'');btn.appendChild(pill)})}
 const _render2=render;render=function(){_render2();paintOT()};
 /* ===== Version control: always run the newest build ===== */
-const APP_VER='2026-11-19.4';
+const APP_VER='2026-11-19.5';
 if('serviceWorker' in navigator){let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloaded){reloaded=true;location.reload()}})}
 H.cloud=()=>{if(!CL.u)return;const st=!navigator.onLine?'Offline. Changes are kept on this device and sync automatically when you reconnect.':CL.sync=='saving'?'Saving changes…':CL.sync=='error'?'Sync problem. Changes will retry when the connection returns.':'All changes synced'+(CL.last?' at '+new Date(CL.last).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'')+'.';
  modal(`<h3>Your account</h3><div class="fl" style="margin-top:12px"><span><b>${esc(CL.u.displayName||'Signed in')}</b><br><small style="color:var(--mu)">${esc(CL.u.email||'')}</small></span></div><p class="sub" style="margin:14px 0 4px">${st}</p><p class="sub" style="margin:0 0 6px">Live sync is on. Changes from your other devices appear here automatically.</p><p class="sub" style="margin:0 0 16px;font-size:11px">App version ${APP_VER}</p><div class="r2" style="justify-content:space-between"><button class="btn gh" data-a="mx">Close</button><button class="btn dg" data-a="gso">Sign out</button></div>`)};
@@ -882,6 +890,33 @@ function taskCard(t){const o=U.to==t.id,fileN=(t.files||[]).length,sh=(t.shares|
 function boardCard(t){const p=t.pri||'Medium',cur=colOf(t);
  return `<div class="kcard" data-tid="${t.id}" style="border-left:4px solid ${priC(p)}"><div class="kt"><span class="kgrip" title="Drag to move" aria-label="Drag handle">⠿</span>${esc(t.title)}</div><div class="kmeta"><span class="ch" style="background:${priC(p)}22;color:${priC(p)}">${p}</span><span class="sub">${t.due?fd(t.due):'No date'} · ${t.hrs?t.hrs+'h':'no hrs'}</span></div><select class="kmove" data-c="tmove" data-id="${t.id}" aria-label="Move to column">${COLS.map(c=>`<option value="${c}" ${cur===c?'selected':''} ${c==='Overdue'&&cur!=='Overdue'?'disabled':''}>${c==='Pending'?'Pending (no date)':c}</option>`).join('')}</select><div class="sub" style="margin-top:6px;font-size:11px">Tap card to edit details</div></div>`}
 document.addEventListener('click',e=>{const c=e.target.closest&&e.target.closest('.kcard');if(!c)return;if(e.target.closest('select,button,a,.kgrip,input'))return;const t=T(c.dataset.tid);if(t)taskEditModal(t)});
+/* ===== Work Register: quick add per column, board priority, overview strip ===== */
+function taskForm(due){const dd=due===undefined?td():due;modal(`<h3>Log work task</h3><form data-s="at2"><label class="l">Title *</label><input class="in" name="title" required>
+<div class="g2"><div><label class="l">Work date</label><input class="in" type="date" name="date" value="${td()}"></div><div><label class="l">Target completion</label><input class="in" type="date" name="due" value="${dd}"></div>
+<div><label class="l">Importance</label><select class="in" name="pri">${PRI.map(x=>`<option ${x[0]=='Medium'?'selected':''}>${x[0]}</option>`).join('')}</select></div>
+<div><label class="l">Status</label><select class="in" name="status">${ST.map(x=>`<option>${x}</option>`).join('')}</select></div>
+<div><label class="l">Hours (optional)</label><input class="in" type="number" name="hrs" min="0" step="0.25"></div><div><label class="l">Project / site</label><input class="in" name="project"></div></div>
+<label class="l">Notes</label><textarea class="in" name="notes" rows="3"></textarea><label class="l">Drive / cloud link</label><input class="in" name="link"><label class="l">File (up to 2 MB)</label><input class="in" type="file" name="file">
+<div class="r2" style="justify-content:flex-end;margin-top:16px"><button type="button" class="btn gh" data-a="mx">Cancel</button><button class="btn">Save</button></div></form>`)}
+H.at=()=>taskForm();
+H.addcol=t=>{const c=t.dataset.col;if(c==='Overdue')return;taskForm(c==='Pending'?'':dueFor(c))};
+function boardCard(t){const p=t.pri||'Medium',cur=colOf(t);
+ return `<div class="kcard" data-tid="${t.id}" style="border-left:4px solid ${priC(p)}"><div class="kt"><span class="kgrip" title="Drag to move" aria-label="Drag handle">⠿</span>${esc(t.title)}</div><div class="kmeta"><select class="ch" data-c="tpri" data-id="${t.id}" aria-label="Importance" style="background:${priC(p)}22;color:${priC(p)};border:0">${PRI.map(x=>`<option ${p===x[0]?'selected':''}>${x[0]}</option>`).join('')}</select><span class="sub">${t.due?fd(t.due):'No date'} · ${t.hrs?t.hrs+'h':'no hrs'}</span></div><select class="kmove" data-c="tmove" data-id="${t.id}" aria-label="Move to column">${COLS.map(c=>`<option value="${c}" ${cur===c?'selected':''} ${c==='Overdue'&&cur!=='Overdue'?'disabled':''}>${c==='Pending'?'Pending (no date)':c}</option>`).join('')}</select><div class="sub" style="margin-top:6px;font-size:11px">Tap card to edit details</div></div>`}
+function boardPage(){const open=S.tasks.filter(t=>t.status!=='Completed');
+ const cols=COLS.map(c=>({c,items:open.filter(t=>colOf(t)===c).sort((a,b)=>PRI.findIndex(x=>x[0]===(a.pri||'Medium'))-PRI.findIndex(x=>x[0]===(b.pri||'Medium'))||String(a.due||'').localeCompare(String(b.due||'')))}));
+ return `<div class="ph"><h2>Work Register</h2><button class="btn" data-a="at">${ic('plus',16)} Log task</button></div>
+<div class="sub" style="margin:-4px 0 12px">Drag a card by its ⠿ handle to another column to change its target date. Tap a card to edit it. Use + to add a task to a column.</div>
+<div class="kb">${cols.map(x=>`<div class="kcol" data-col="${x.c}"><div class="kh"><b>${x.c}</b><span style="display:flex;gap:6px;align-items:center"><span class="kn">${x.items.length}</span>${x.c!=='Overdue'?`<button class="kadd" data-a="addcol" data-col="${x.c}" aria-label="Add task to ${x.c}" title="Add task">+</button>`:''}</span></div><div class="kdrop" data-drop="${x.c}">${x.items.map(boardCard).join('')||(x.c!=='Overdue'?`<button class="kempty" data-a="addcol" data-col="${x.c}">+ Add task</button>`:'<div class="kempty">Nothing overdue</div>')}</div></div>`).join('')}</div>`}
+function workStats(){const open=S.tasks.filter(t=>t.status!=='Completed');
+ const od=open.filter(t=>colOf(t)==='Overdue').length,dt=open.filter(t=>colOf(t)==='Today').length,hrs=wFiltered().reduce((a,t)=>a+(+t.hrs||0),0);
+ return `<div class="wstats"><div class="wstat" style="border-top:3px solid #4f46e5"><small>Open tasks</small><b>${open.length}</b></div><div class="wstat" style="border-top:3px solid #dc2626"><small>Overdue</small><b>${od}</b></div><div class="wstat" style="border-top:3px solid #db2777"><small>Due today</small><b>${dt}</b></div><div class="wstat" style="border-top:3px solid #d97706"><small>Hours in view</small><b>${hrs.toFixed(1)}</b></div></div>`}
+function workV(){if(_wvMode==='board')return boardPage();
+ return `<div class="ph"><h2>Work Register</h2><button class="btn" data-a="at">${ic('plus',16)} Log task</button></div>
+${workStats()}
+<input class="in wsearch" placeholder="Search title, notes, people, project" value="${esc(U.wq)}" data-i="wq">
+<div class="pill">${[['all','All'],['today','Today'],['week','7 days'],['month','Month']].map(([v,l])=>`<button class="${U.per==v?'on':''}" data-a="per" data-v="${v}">${l}</button>`).join('')}</div>
+<div class="wfilters"><label class="wf"><span>From</span><input class="in" type="date" value="${U.from}" data-c="from"></label><label class="wf"><span>To</span><input class="in" type="date" value="${U.to2}" data-c="to2"></label><label class="wf"><span>Sort</span><select class="in" data-c="sort">${[['new','Newest'],['old','Oldest'],['time','Most time']].map(([v,l])=>`<option value="${v}" ${U.sort==v?'selected':''}>${l}</option>`).join('')}</select></label></div>
+<div id="wl">${workList()}</div>`}
 document.addEventListener('change',e=>{const c=e.target.dataset.c;c&&C[c]&&C[c](e.target)});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,k=f.dataset.s,v=Object.fromEntries(new FormData(f));
 if(k=='pw'){CL.pw=v.pw;close();CL.next&&CL.next();return}
@@ -901,7 +936,7 @@ if(k=='upd'){if(!(v.text||'').trim())return toast('Enter what you found');const 
  S.updates=S.updates||[];S.updates.unshift({id:uid(),kind:f.dataset.k,ref:f.dataset.id,title:(src&&(src.name||src.title))||'Update',text:v.text.trim(),link:(v.link||'').trim(),date:td()});
  if(isJ&&src)logJ(src,'Update found: '+v.text.trim().slice(0,60));toast('Update saved to notifications')}
 if(k=='at2'){const title=(v.title||'').trim();if(!title)return toast('Enter a title');const day=v.date||td();
- const t={id:uid(),title,pri:v.pri||'Medium',status:v.status||'Ongoing',date:day,due:v.due||day,hrs:+v.hrs||0,project:(v.project||'').trim(),notes:(v.notes||'').trim(),link:(v.link||'').trim(),files:[],shares:[],hist:[{d:td(),s:v.status||'Ongoing'}]};
+ const t={id:uid(),title,pri:v.pri||'Medium',status:v.status||'Ongoing',date:day,due:v.due!==undefined?v.due:day,hrs:+v.hrs||0,project:(v.project||'').trim(),notes:(v.notes||'').trim(),link:(v.link||'').trim(),files:[],shares:[],hist:[{d:td(),s:v.status||'Ongoing'}]};
  if(t.link&&!/^https?:/.test(t.link))t.link='https://'+t.link;
  const fl=f.querySelector('input[type=file]').files[0];if(fl){try{t.files.push(await rdf(fl))}catch(x){return}}
  S.tasks.unshift(t);U.to=t.id;U.wt=t.status;U.per='all';U.from=U.to2='';U.view='work'}
