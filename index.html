@@ -207,6 +207,21 @@ button.kempty{width:100%;background:none;color:var(--ac);font-weight:700;cursor:
 ::-webkit-scrollbar-corner{background:transparent}
 .sheet,.kdrop,.kb,.tabs,.pill{scrollbar-width:none}
 .sheet::-webkit-scrollbar,.kdrop::-webkit-scrollbar,.kb::-webkit-scrollbar,.tabs::-webkit-scrollbar,.pill::-webkit-scrollbar{display:none;width:0;height:0}
+/* ===== Pop-ups: fit on screen without any scrollbar on laptops ===== */
+.tf3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 10px}
+.tf3>div{min-width:0}
+@media (min-width:600px){
+ .sheet{overflow:visible!important;max-height:none!important;padding:16px 18px!important;max-width:560px}
+ .ov{overflow-y:auto;scrollbar-width:none}
+ .ov::-webkit-scrollbar{display:none}
+}
+.sheet h3{margin:0 0 4px!important;font-size:17px!important}
+.sheet .l{margin:7px 0 3px!important}
+.sheet .in{padding:7px 10px!important;font-size:13px!important}
+.sheet textarea.in{min-height:0!important}
+.sheet .g2{gap:8px 10px!important}
+.sheet .r2{margin-top:10px!important}
+@media (max-width:560px){.tf3{grid-template-columns:1fr 1fr}}
 </style><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -686,7 +701,7 @@ function paintOT(){if(U.view!=='att'||!U.ar)return;const r=R(U.ar);if(!r)return;
   const pill=document.createElement('i');pill.className='otb';pill.textContent='+'+txt;pill.title='Overtime '+txt+(e.note?' · '+e.note:'');btn.appendChild(pill)})}
 const _render2=render;render=function(){_render2();paintOT()};
 /* ===== Version control: always run the newest build ===== */
-const APP_VER='2026-11-19.7';
+const APP_VER='2026-11-19.8';
 if('serviceWorker' in navigator){let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloaded){reloaded=true;location.reload()}})}
 H.cloud=()=>{if(!CL.u)return;const st=!navigator.onLine?'Offline. Changes are kept on this device and sync automatically when you reconnect.':CL.sync=='saving'?'Saving changes…':CL.sync=='error'?'Sync problem. Changes will retry when the connection returns.':'All changes synced'+(CL.last?' at '+new Date(CL.last).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'')+'.';
  modal(`<h3>Your account</h3><div class="fl" style="margin-top:12px"><span><b>${esc(CL.u.displayName||'Signed in')}</b><br><small style="color:var(--mu)">${esc(CL.u.email||'')}</small></span></div><p class="sub" style="margin:14px 0 4px">${st}</p><p class="sub" style="margin:0 0 6px">Live sync is on. Changes from your other devices appear here automatically.</p><p class="sub" style="margin:0 0 16px;font-size:11px">App version ${APP_VER}</p><div class="r2" style="justify-content:space-between"><button class="btn gh" data-a="mx">Close</button><button class="btn dg" data-a="gso">Sign out</button></div>`)};
@@ -961,6 +976,23 @@ function boardPage(){const open=S.tasks.filter(t=>t.status!=='Completed');
  return `<div class="ph"><h2>Work Register</h2><button class="btn" data-a="at">${ic('plus',16)} Log task</button></div>
 <div class="sub" style="margin:-4px 0 10px">Drag a card by ⠿ to another column to change its target date. Tap a card to edit. Click "Add task here" in any column to add one there.</div>
 <div class="kb">${cols.map(x=>`<div class="kcol" data-col="${x.c}"><div class="kh"><b>${x.c}</b><span style="display:flex;gap:6px;align-items:center"><span class="kn">${x.items.length}</span></span></div><div class="kdrop" data-drop="${x.c}">${x.items.map(boardCard).join('')}</div>${x.c!=='Overdue'?`<button class="kzone" data-a="addcol" data-col="${x.c}">+ Add task here</button>`:'<div class="kzone off">Overdue is automatic</div>'}</div>`).join('')}</div>`}
+/* ===== Compact task pop-ups ===== */
+function taskForm(due){const dd=due===undefined?td():due;modal(`<h3>Log work task</h3><form data-s="at2"><label class="l">Title *</label><input class="in" name="title" required>
+<div class="tf3" style="margin-top:4px"><div><label class="l">Work date</label><input class="in" type="date" name="date" value="${td()}"></div><div><label class="l">Target completion</label><input class="in" type="date" name="due" value="${dd}"></div>
+<div><label class="l">Importance</label><select class="in" name="pri">${PRI.map(x=>`<option ${x[0]=='Medium'?'selected':''}>${x[0]}</option>`).join('')}</select></div>
+<div><label class="l">Status</label><select class="in" name="status">${ST.map(x=>`<option>${x}</option>`).join('')}</select></div>
+<div><label class="l">Hours (optional)</label><input class="in" type="number" name="hrs" min="0" step="0.25"></div><div><label class="l">Project / site</label><input class="in" name="project"></div></div>
+<label class="l">Notes</label><textarea class="in" name="notes" rows="2"></textarea>
+<div class="g2"><div><label class="l">Drive / cloud link</label><input class="in" name="link"></div><div><label class="l">File (up to 2 MB)</label><input class="in" type="file" name="file"></div></div>
+<div class="r2" style="justify-content:flex-end;margin-top:12px"><button type="button" class="btn gh" data-a="mx">Cancel</button><button class="btn">Save</button></div></form>`)}
+H.at=()=>taskForm();
+function taskEditModal(t){modal(`<h3>Edit task</h3><form data-s="tedit" data-id="${t.id}"><label class="l">Title *</label><input class="in" name="title" required value="${esc(t.title)}">
+<div class="tf3" style="margin-top:4px"><div><label class="l">Target completion</label><input class="in" type="date" name="due" value="${t.due||''}"></div><div><label class="l">Work date</label><input class="in" type="date" name="date" value="${t.date||td()}"></div>
+<div><label class="l">Importance</label><select class="in" name="pri">${PRI.map(x=>`<option ${(t.pri||'Medium')===x[0]?'selected':''}>${x[0]}</option>`).join('')}</select></div>
+<div><label class="l">Status</label><select class="in" name="status">${ST.map(x=>`<option ${t.status==x?'selected':''}>${x}</option>`).join('')}</select></div>
+<div><label class="l">Hours (optional)</label><input class="in" type="number" name="hrs" min="0" step="0.25" value="${t.hrs||''}"></div><div><label class="l">Project / site</label><input class="in" name="project" value="${esc(t.project||'')}"></div></div>
+<div class="g2"><div><label class="l">Working link</label><input class="in" name="link" value="${esc(t.link||'')}"></div><div><label class="l">Notes</label><input class="in" name="notes" value="${esc(t.notes||'')}"></div></div>
+<div class="r2" style="justify-content:space-between;margin-top:12px"><button type="button" class="btn dg" data-a="dt" data-id="${t.id}">Delete</button><div class="r2"><button type="button" class="btn gh" data-a="mx">Cancel</button><button class="btn">Save</button></div></div></form>`)}
 document.addEventListener('change',e=>{const c=e.target.dataset.c;c&&C[c]&&C[c](e.target)});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,k=f.dataset.s,v=Object.fromEntries(new FormData(f));
 if(k=='pw'){CL.pw=v.pw;close();CL.next&&CL.next();return}
