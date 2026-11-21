@@ -198,6 +198,15 @@ button.kempty{width:100%;background:none;color:var(--ac);font-weight:700;cursor:
 .tb .in{padding:7px 9px;font-size:13px}
 .tb-up{margin-top:4px;padding:7px;font-size:12px}
 .tb-list .fl{padding:6px 8px;margin-top:4px}
+/* ===== Slim theme-matched scrollbars; hidden inside pop-up sheets (still scrollable) ===== */
+*{scrollbar-width:thin;scrollbar-color:var(--bd) transparent}
+::-webkit-scrollbar{width:7px;height:7px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:var(--mu)}
+::-webkit-scrollbar-corner{background:transparent}
+.sheet,.kdrop,.kb,.tabs,.pill{scrollbar-width:none}
+.sheet::-webkit-scrollbar,.kdrop::-webkit-scrollbar,.kb::-webkit-scrollbar,.tabs::-webkit-scrollbar,.pill::-webkit-scrollbar{display:none;width:0;height:0}
 </style><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -677,7 +686,7 @@ function paintOT(){if(U.view!=='att'||!U.ar)return;const r=R(U.ar);if(!r)return;
   const pill=document.createElement('i');pill.className='otb';pill.textContent='+'+txt;pill.title='Overtime '+txt+(e.note?' · '+e.note:'');btn.appendChild(pill)})}
 const _render2=render;render=function(){_render2();paintOT()};
 /* ===== Version control: always run the newest build ===== */
-const APP_VER='2026-11-19.6';
+const APP_VER='2026-11-19.7';
 if('serviceWorker' in navigator){let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloaded){reloaded=true;location.reload()}})}
 H.cloud=()=>{if(!CL.u)return;const st=!navigator.onLine?'Offline. Changes are kept on this device and sync automatically when you reconnect.':CL.sync=='saving'?'Saving changes…':CL.sync=='error'?'Sync problem. Changes will retry when the connection returns.':'All changes synced'+(CL.last?' at '+new Date(CL.last).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'')+'.';
  modal(`<h3>Your account</h3><div class="fl" style="margin-top:12px"><span><b>${esc(CL.u.displayName||'Signed in')}</b><br><small style="color:var(--mu)">${esc(CL.u.email||'')}</small></span></div><p class="sub" style="margin:14px 0 4px">${st}</p><p class="sub" style="margin:0 0 6px">Live sync is on. Changes from your other devices appear here automatically.</p><p class="sub" style="margin:0 0 16px;font-size:11px">App version ${APP_VER}</p><div class="r2" style="justify-content:space-between"><button class="btn gh" data-a="mx">Close</button><button class="btn dg" data-a="gso">Sign out</button></div>`)};
