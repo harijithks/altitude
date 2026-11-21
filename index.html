@@ -261,6 +261,31 @@ button.kempty{width:100%;background:none;color:var(--ac);font-weight:700;cursor:
 .karrow{flex:0 0 38px;border:1px solid var(--bd);background:var(--cd);color:var(--tx);border-radius:12px;font-size:22px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0;box-shadow:0 1px 2px rgba(0,0,0,.05)}
 .karrow:hover{border-color:var(--ac);color:var(--ac)}
 @media(max-width:560px){.karrow{flex-basis:30px;font-size:18px;border-radius:10px}.kbar{gap:6px}}
+/* ===== Career summary: readable in light and dark themes, clean print ===== */
+.resume{color:var(--tx)}
+.resume h2,.resume h3{color:var(--tx)!important;margin:0 0 4px!important}
+.resume h3{margin-top:22px!important;font-size:16px!important}
+.rs-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0 4px!important}
+.rs-k>div{border:1px solid var(--bd)!important;border-radius:14px!important;padding:12px 14px!important;background:var(--in)!important;min-width:0}
+.rs-k small{color:var(--mu)!important;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.rs-k b{display:block;color:var(--tx)!important;font-size:18px!important;margin-top:4px}
+.rs-co{border-top:2px solid var(--ac)!important;margin-top:20px!important;padding-top:12px!important}
+.rs-h{color:var(--tx)!important;font-size:16px!important;align-items:baseline;flex-wrap:wrap}
+.rs-h b{color:var(--tx)!important}
+.rs-h span{color:var(--mu)!important;font-size:12px!important;white-space:nowrap}
+.rs-p{border-left:2px solid var(--bd)!important;color:var(--tx)!important;padding:8px 0 8px 14px!important;margin-top:8px!important}
+.rs-p b{color:var(--tx)}
+.rs-p .sub{color:var(--mu)!important;font-size:12px;margin-top:2px}
+.rs-n{color:var(--mu)!important;font-size:12px;margin-top:4px;line-height:1.5}
+@media(max-width:560px){.rs-k{grid-template-columns:1fr 1fr}.rs-k>div:last-child{grid-column:1/-1}}
+@media print{
+ .resume,.resume *{color:#000!important;background:none!important;border-color:#bbb!important}
+ .resume .rs-k b{color:#000!important}
+ .rs-co{border-top-color:#000!important}
+}
+/* ===== Document vault: dates, search, date filters ===== */
+#dvlist .fl{margin-top:8px;padding:12px 14px}
+.dv-date{display:inline-block;background:var(--mub);color:var(--mu);border-radius:6px;padding:1px 7px;font-size:11px;font-weight:700}
 </style><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -740,7 +765,7 @@ function paintOT(){if(U.view!=='att'||!U.ar)return;const r=R(U.ar);if(!r)return;
   const pill=document.createElement('i');pill.className='otb';pill.textContent='+'+txt;pill.title='Overtime '+txt+(e.note?' · '+e.note:'');btn.appendChild(pill)})}
 const _render2=render;render=function(){_render2();paintOT()};
 /* ===== Version control: always run the newest build ===== */
-const APP_VER='2026-11-20.2';
+const APP_VER='2026-11-20.4';
 if('serviceWorker' in navigator){let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloaded){reloaded=true;location.reload()}})}
 H.cloud=()=>{if(!CL.u)return;const st=!navigator.onLine?'Offline. Changes are kept on this device and sync automatically when you reconnect.':CL.sync=='saving'?'Saving changes…':CL.sync=='error'?'Sync problem. Changes will retry when the connection returns.':'All changes synced'+(CL.last?' at '+new Date(CL.last).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'')+'.';
  modal(`<h3>Your account</h3><div class="fl" style="margin-top:12px"><span><b>${esc(CL.u.displayName||'Signed in')}</b><br><small style="color:var(--mu)">${esc(CL.u.email||'')}</small></span></div><p class="sub" style="margin:14px 0 4px">${st}</p><p class="sub" style="margin:0 0 6px">Live sync is on. Changes from your other devices appear here automatically.</p><p class="sub" style="margin:0 0 16px;font-size:11px">App version ${APP_VER}</p><div class="r2" style="justify-content:space-between"><button class="btn gh" data-a="mx">Close</button><button class="btn dg" data-a="gso">Sign out</button></div>`)};
@@ -1072,6 +1097,41 @@ Object.assign(H,{
  kr:()=>{const k=document.getElementById('kb');if(k)k.scrollBy({left:320,behavior:'smooth'})}
 });
 const _render6=render;render=function(){const k=document.getElementById('kb'),sl=k?k.scrollLeft:0;_render6();const k2=document.getElementById('kb');if(k2)k2.scrollLeft=sl};
+/* ===== Document vault with dates, search and date filters ===== */
+let DVQ='',DVP='all',DVF='',DVT='',DVROWS=[];
+const okD=d=>/^\d{4}-\d{2}-\d{2}$/.test(String(d||''));
+function allDocs(){const o=[];
+ S.jobs.forEach(j=>j.stages.forEach(st=>st.files.forEach(f=>o.push({f,src:j.name+' · '+st.name,pd:st.date}))));
+ S.tasks.forEach(t=>t.files.forEach(f=>o.push({f,src:'Work · '+t.title,pd:t.date})));
+ RL().forEach(r=>r.files.forEach(f=>o.push({f,src:r.org+' · '+r.title,pd:r.from?r.from+'-01':''})));
+ ED().forEach(e=>e.files.forEach(f=>o.push({f,src:'Education · '+e.name,pd:e.year&&/^\d{4}/.test(e.year)?e.year.slice(0,4)+'-01-01':''})));
+ return o}
+function dvFiltered(){const q=DVQ.trim().toLowerCase(),today=td(),wk=addDays(-6),mo=today.slice(0,7);
+ return allDocs().map(x=>({...x,d:okD(x.f.at)?x.f.at:(okD(x.pd)?x.pd:'')})).filter(x=>{
+  if(q&&!((x.f.n||'')+' '+x.src).toLowerCase().includes(q))return false;
+  if(DVP==='today')return x.d===today;
+  if(DVP==='week')return !!x.d&&x.d>=wk&&x.d<=today;
+  if(DVP==='month')return !!x.d&&x.d.slice(0,7)===mo;
+  if(DVP==='custom'){if(DVF&&(!x.d||x.d<DVF))return false;if(DVT&&(!x.d||x.d>DVT))return false}
+  return true}).sort((a,b)=>(b.d||'').localeCompare(a.d||''))}
+function dvRows(){DVROWS=dvFiltered();
+ return DVROWS.length?DVROWS.map((x,i)=>`<div class="fl"><span style="min-width:0"><b>${esc(x.f.n)}</b><br><small style="color:var(--mu)">${esc(x.src)}${x.f.s?' · '+x.f.s:''}</small></span><span class="dv-date">${x.d?fd(x.d):'No date'}</span><button class="ic" data-a="dvdl" data-m="${i}" aria-label="Download">${ic('dl',15)}</button></div>`).join(''):'<div class="sub" style="margin:16px 0">No documents match these filters.</div>'}
+function refreshDV(){const l=document.getElementById('dvlist');if(!l)return;l.innerHTML=dvRows();const c=document.getElementById('dvcount');if(c)c.textContent=DVROWS.length+' file(s)'}
+H.docs=()=>{modal(`<h3>Document vault</h3><p class="sub" style="margin-bottom:12px">Every file you've attached, with its date.</p>
+<input class="in" placeholder="Search file name or where it's from" value="${esc(DVQ)}" data-i="dvq">
+<div class="pill" style="margin-top:10px">${[['all','All'],['today','Today'],['week','Last 7 days'],['month','This month'],['custom','Custom']].map(([v,l])=>`<button class="${DVP==v?'on':''}" data-a="dvp" data-v="${v}">${l}</button>`).join('')}</div>
+${DVP==='custom'?`<div class="g2" style="margin-top:8px"><div><label class="l">From</label><input class="in" type="date" value="${DVF}" data-c="dvc" data-k="DVF"></div><div><label class="l">To</label><input class="in" type="date" value="${DVT}" data-c="dvc" data-k="DVT"></div></div>`:''}
+<div class="sub" id="dvcount" style="margin-top:12px"></div>
+<div id="dvlist" style="max-height:50vh;overflow:auto;padding-right:2px">${dvRows()}</div>
+<div class="r2" style="justify-content:flex-end;margin-top:14px"><button class="btn gh" data-a="mx">Close</button></div>`);
+ setTimeout(refreshDV,0)};
+Object.assign(H,{
+ dvp:t=>{DVP=t.dataset.v;if(DVP!=='custom'){DVF='';DVT=''}H.docs()},
+ dvdl:t=>{const x=DVROWS[+t.dataset.m];if(x)dlf(x.f)}
+});
+Object.assign(C,{dvc:t=>{if(t.dataset.k==='DVF')DVF=t.value;else DVT=t.value;refreshDV()}});
+document.addEventListener('input',e=>{if(e.target&&e.target.dataset&&e.target.dataset.i==='dvq'){DVQ=e.target.value;refreshDV()}});
+const _pushNow2=pushNow;pushNow=async()=>{allFiles().forEach(x=>{if(x.d&&!x.at)x.at=td()});return _pushNow2()};
 document.addEventListener('change',e=>{const c=e.target.dataset.c;c&&C[c]&&C[c](e.target)});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,k=f.dataset.s,v=Object.fromEntries(new FormData(f));
 if(k=='pw'){CL.pw=v.pw;close();CL.next&&CL.next();return}
