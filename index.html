@@ -185,6 +185,19 @@ input[type=date]::-webkit-calendar-picker-indicator{position:absolute;inset:0;wi
 .kadd:disabled{opacity:.3;cursor:not-allowed}
 button.kempty{width:100%;background:none;color:var(--ac);font-weight:700;cursor:pointer}
 @media(max-width:560px){.wstats{grid-template-columns:1fr 1fr;gap:8px}.wstat b{font-size:19px}}
+.kcol{max-height:none!important}
+.kdrop{flex:none!important;overflow:visible!important;min-height:0!important}
+.kzone{width:100%;border:2px dashed var(--bd);background:transparent;border-radius:10px;padding:10px;color:var(--ac);font-weight:700;font-size:13px;cursor:pointer;margin-top:2px}
+.kzone:hover{border-color:var(--ac);background:rgba(79,70,229,.06)}
+.kzone.off{color:var(--mu);cursor:default;font-weight:600}
+.kcard{padding:9px 10px!important}
+.kcard .kt{margin-bottom:6px}
+.kmeta{margin-bottom:6px!important}
+.tb .l{margin:6px 0 3px!important}
+.tb-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 10px}
+.tb .in{padding:7px 9px;font-size:13px}
+.tb-up{margin-top:4px;padding:7px;font-size:12px}
+.tb-list .fl{padding:6px 8px;margin-top:4px}
 </style><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -664,7 +677,7 @@ function paintOT(){if(U.view!=='att'||!U.ar)return;const r=R(U.ar);if(!r)return;
   const pill=document.createElement('i');pill.className='otb';pill.textContent='+'+txt;pill.title='Overtime '+txt+(e.note?' · '+e.note:'');btn.appendChild(pill)})}
 const _render2=render;render=function(){_render2();paintOT()};
 /* ===== Version control: always run the newest build ===== */
-const APP_VER='2026-11-19.5';
+const APP_VER='2026-11-19.6';
 if('serviceWorker' in navigator){let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloaded){reloaded=true;location.reload()}})}
 H.cloud=()=>{if(!CL.u)return;const st=!navigator.onLine?'Offline. Changes are kept on this device and sync automatically when you reconnect.':CL.sync=='saving'?'Saving changes…':CL.sync=='error'?'Sync problem. Changes will retry when the connection returns.':'All changes synced'+(CL.last?' at '+new Date(CL.last).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'')+'.';
  modal(`<h3>Your account</h3><div class="fl" style="margin-top:12px"><span><b>${esc(CL.u.displayName||'Signed in')}</b><br><small style="color:var(--mu)">${esc(CL.u.email||'')}</small></span></div><p class="sub" style="margin:14px 0 4px">${st}</p><p class="sub" style="margin:0 0 6px">Live sync is on. Changes from your other devices appear here automatically.</p><p class="sub" style="margin:0 0 16px;font-size:11px">App version ${APP_VER}</p><div class="r2" style="justify-content:space-between"><button class="btn gh" data-a="mx">Close</button><button class="btn dg" data-a="gso">Sign out</button></div>`)};
@@ -917,6 +930,28 @@ ${workStats()}
 <div class="pill">${[['all','All'],['today','Today'],['week','7 days'],['month','Month']].map(([v,l])=>`<button class="${U.per==v?'on':''}" data-a="per" data-v="${v}">${l}</button>`).join('')}</div>
 <div class="wfilters"><label class="wf"><span>From</span><input class="in" type="date" value="${U.from}" data-c="from"></label><label class="wf"><span>To</span><input class="in" type="date" value="${U.to2}" data-c="to2"></label><label class="wf"><span>Sort</span><select class="in" data-c="sort">${[['new','Newest'],['old','Oldest'],['time','Most time']].map(([v,l])=>`<option value="${v}" ${U.sort==v?'selected':''}>${l}</option>`).join('')}</select></label></div>
 <div id="wl">${workList()}</div>`}
+/* ===== Compact task editing, full-height columns, add in every column ===== */
+function taskBody(t){const shares=(t.shares||[]);
+ return `<div class="tb">
+<div class="tb-row"><div><label class="l">Target date</label><input class="in" type="date" value="${t.due||''}" data-c="tdue" data-id="${t.id}"></div>
+<div><label class="l">Work date</label><input class="in" type="date" value="${t.date||''}" data-c="tf" data-id="${t.id}" data-k="date"></div>
+<div><label class="l">Hours</label><input class="in" type="number" min="0" step="0.25" value="${t.hrs||''}" data-c="tf" data-id="${t.id}" data-k="hrs" placeholder="optional"></div>
+<div><label class="l">Project / site</label><input class="in" value="${esc(t.project||'')}" data-c="tf" data-id="${t.id}" data-k="project"></div>
+<div><label class="l">Status</label><select class="in" data-c="tst" data-id="${t.id}">${ST.map(x=>`<option ${t.status==x?'selected':''}>${x}</option>`).join('')}</select></div></div>
+<div class="tb-row" style="margin-top:4px"><div style="grid-column:span 2"><label class="l">Working link</label><div class="r2" style="flex-wrap:nowrap"><input class="in" value="${esc(t.link||'')}" data-c="tf" data-id="${t.id}" data-k="link" placeholder="https://drive.google.com/…">${t.link?`<a class="ic" href="${esc(t.link)}" target="_blank" rel="noreferrer" aria-label="Open link">${ic('ext',16)}</a>`:''}</div></div>
+<div style="grid-column:span 2"><label class="l">Notes</label><textarea class="in" rows="2" data-c="tf" data-id="${t.id}" data-k="notes" placeholder="Calculations, decisions, follow-ups">${esc(t.notes||'')}</textarea></div></div>
+<div class="tb-row tb-list" style="margin-top:4px"><div><label class="l">Files (up to 2 MB)</label>${(t.files||[]).map((f,i)=>`<div class="fl"><span>📎 ${esc(f.n)} · ${f.s||''}</span><button class="ic" data-a="df" data-w="t" data-id="${t.id}" data-m="${i}" aria-label="Download">${ic('dl',14)}</button><button class="ic" data-a="rf" data-w="t" data-id="${t.id}" data-m="${i}" aria-label="Remove">${ic('x',14)}</button></div>`).join('')}<label class="up tb-up">${ic('dl',14)} Attach file<input type="file" hidden data-c="tfile" data-id="${t.id}"></label></div>
+<div><label class="l">Shared with</label>${shares.map((x,i)=>`<div class="fl"><span>${fd(x.d)} · <b>${esc(x.who)}</b> via ${esc(x.med)}</span><button class="ic" data-a="rsh" data-id="${t.id}" data-m="${i}" aria-label="Remove">${ic('x',14)}</button></div>`).join('')}<div class="r2 sh" style="margin-top:4px;flex-wrap:nowrap"><input class="in" placeholder="Person or dept"><select class="in" style="max-width:130px">${['Email','WhatsApp','Google Drive','Slack/Teams','Hardcopy','Other'].map(m=>`<option>${m}</option>`).join('')}</select><button class="btn sm" data-a="ash" data-id="${t.id}">Add</button></div></div></div>
+<div class="r2" style="justify-content:space-between;margin-top:8px"><span class="sub" style="font-size:11px">${(t.hist||[]).map(h=>`${fd(h.d)} ${esc(h.s)}`).join(' → ')}</span><button class="btn sm gh" data-a="dt" data-id="${t.id}" style="color:var(--er)">Delete</button></div></div>`}
+function taskCard(t){const o=U.to==t.id,fileN=(t.files||[]).length,sh=(t.shares||[]).length,p=t.pri||'Medium';
+ return `<div class="card" id="t${t.id}" style="border-left:5px solid ${priC(p)}"><div class="hd" data-a="tt" data-id="${t.id}"><div class="gr"><div class="nm">${esc(t.title)}</div><div class="sub">${fd(t.date)} · ${t.hrs?t.hrs+'h':'hours not logged'}${t.due?' · target '+fd(t.due):''}${t.project?' · '+esc(t.project):''}${sh?` · shared ×${sh}`:''}${fileN?` · 📎${fileN}`:''}</div></div><div class="rt"><select class="ch" style="background:${priC(p)}22;color:${priC(p)}" data-c="tpri" data-id="${t.id}" aria-label="Importance" title="Importance">${PRI.map(x=>`<option ${p===x[0]?'selected':''}>${x[0]}</option>`).join('')}</select><select class="ch ${SC[t.status]||''}" data-c="tst" data-id="${t.id}" aria-label="Change status">${ST.map(x=>`<option ${t.status==x?'selected':''}>${x}</option>`).join('')}</select><span class="cv ${o?'up':''}">${ic('chev')}</span></div></div>${o?taskBody(t):''}</div>`}
+function boardCard(t){const p=t.pri||'Medium',cur=colOf(t);
+ return `<div class="kcard" data-tid="${t.id}" style="border-left:4px solid ${priC(p)}"><div class="kt"><span class="kgrip" title="Drag to move" aria-label="Drag handle">⠿</span>${esc(t.title)}</div><div class="kmeta"><select class="ch" data-c="tpri" data-id="${t.id}" aria-label="Importance" style="background:${priC(p)}22;color:${priC(p)};border:0">${PRI.map(x=>`<option ${p===x[0]?'selected':''}>${x[0]}</option>`).join('')}</select><span class="sub">${t.due?fd(t.due):'No date'} · ${t.hrs?t.hrs+'h':'no hrs'}</span></div><select class="kmove" data-c="tmove" data-id="${t.id}" aria-label="Move to column">${COLS.map(c=>`<option value="${c}" ${cur===c?'selected':''} ${c==='Overdue'&&cur!=='Overdue'?'disabled':''}>${c==='Pending'?'Pending (no date)':c}</option>`).join('')}</select></div>`}
+function boardPage(){const open=S.tasks.filter(t=>t.status!=='Completed');
+ const cols=COLS.map(c=>({c,items:open.filter(t=>colOf(t)===c).sort((a,b)=>PRI.findIndex(x=>x[0]===(a.pri||'Medium'))-PRI.findIndex(x=>x[0]===(b.pri||'Medium'))||String(a.due||'').localeCompare(String(b.due||'')))}));
+ return `<div class="ph"><h2>Work Register</h2><button class="btn" data-a="at">${ic('plus',16)} Log task</button></div>
+<div class="sub" style="margin:-4px 0 10px">Drag a card by ⠿ to another column to change its target date. Tap a card to edit. Click "Add task here" in any column to add one there.</div>
+<div class="kb">${cols.map(x=>`<div class="kcol" data-col="${x.c}"><div class="kh"><b>${x.c}</b><span style="display:flex;gap:6px;align-items:center"><span class="kn">${x.items.length}</span></span></div><div class="kdrop" data-drop="${x.c}">${x.items.map(boardCard).join('')}</div>${x.c!=='Overdue'?`<button class="kzone" data-a="addcol" data-col="${x.c}">+ Add task here</button>`:'<div class="kzone off">Overdue is automatic</div>'}</div>`).join('')}</div>`}
 document.addEventListener('change',e=>{const c=e.target.dataset.c;c&&C[c]&&C[c](e.target)});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,k=f.dataset.s,v=Object.fromEntries(new FormData(f));
 if(k=='pw'){CL.pw=v.pw;close();CL.next&&CL.next();return}
