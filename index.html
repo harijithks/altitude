@@ -239,6 +239,19 @@ button.kempty{width:100%;background:none;color:var(--ac);font-weight:700;cursor:
 .tb .up{margin-top:8px}
 @media(max-width:760px){.tb-grid{grid-template-columns:1fr}.tb-sec.wide{grid-column:auto}}
 @media(max-width:560px){.tb{padding:14px 12px 12px}.tb-row4{grid-template-columns:1fr 1fr}.tb-row2{grid-template-columns:1fr}.tb-sec{padding:12px}}
+/* ===== Expanded task: spacious layout, auto-growing notes, upload icon ===== */
+.tb{padding:20px 22px 18px!important}
+.tb-grid{gap:16px!important}
+.tb-sec{padding:16px 18px!important;border-radius:16px!important}
+.tb-h{margin-bottom:12px!important;font-size:11px!important}
+.tb-sec.notes-sec{display:flex;flex-direction:column}
+.tb textarea.in{min-height:140px!important;resize:none!important;overflow:hidden;line-height:1.5;padding:12px 13px!important}
+.tb .in{font-size:14px!important}
+.tb .up{padding:16px!important;font-size:14px!important;border-radius:14px!important}
+.tb-row4{gap:14px!important}
+.tb-row2{gap:14px!important}
+.tb-foot{margin-top:18px!important}
+@media(max-width:760px){.tb{padding:16px 14px!important}}
 </style><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -718,7 +731,7 @@ function paintOT(){if(U.view!=='att'||!U.ar)return;const r=R(U.ar);if(!r)return;
   const pill=document.createElement('i');pill.className='otb';pill.textContent='+'+txt;pill.title='Overtime '+txt+(e.note?' · '+e.note:'');btn.appendChild(pill)})}
 const _render2=render;render=function(){_render2();paintOT()};
 /* ===== Version control: always run the newest build ===== */
-const APP_VER='2026-11-19.9';
+const APP_VER='2026-11-20.1';
 if('serviceWorker' in navigator){let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloaded){reloaded=true;location.reload()}})}
 H.cloud=()=>{if(!CL.u)return;const st=!navigator.onLine?'Offline. Changes are kept on this device and sync automatically when you reconnect.':CL.sync=='saving'?'Saving changes…':CL.sync=='error'?'Sync problem. Changes will retry when the connection returns.':'All changes synced'+(CL.last?' at '+new Date(CL.last).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'')+'.';
  modal(`<h3>Your account</h3><div class="fl" style="margin-top:12px"><span><b>${esc(CL.u.displayName||'Signed in')}</b><br><small style="color:var(--mu)">${esc(CL.u.email||'')}</small></span></div><p class="sub" style="margin:14px 0 4px">${st}</p><p class="sub" style="margin:0 0 6px">Live sync is on. Changes from your other devices appear here automatically.</p><p class="sub" style="margin:0 0 16px;font-size:11px">App version ${APP_VER}</p><div class="r2" style="justify-content:space-between"><button class="btn gh" data-a="mx">Close</button><button class="btn dg" data-a="gso">Sign out</button></div>`)};
@@ -1025,11 +1038,18 @@ function taskBody(t){const shares=t.shares||[],files=t.files||[];
 <label class="l">Project / site</label><input class="in" value="${esc(t.project||'')}" data-c="tf" data-id="${t.id}" data-k="project">
 <label class="l">Working link</label><div class="r2" style="flex-wrap:nowrap"><input class="in" value="${esc(t.link||'')}" placeholder="https://drive.google.com/…" data-c="tf" data-id="${t.id}" data-k="link">${t.link?`<a class="ic" href="${esc(t.link)}" target="_blank" rel="noreferrer" aria-label="Open link">${ic('ext',16)}</a>`:''}</div>
 </div>
-<div class="tb-sec"><div class="tb-h">Notes</div><textarea class="in" rows="4" placeholder="Calculations, decisions, follow-ups" data-c="tf" data-id="${t.id}" data-k="notes">${esc(t.notes||'')}</textarea></div>
+<div class="tb-sec notes-sec"><div class="tb-h">Notes</div><textarea class="in" rows="4" placeholder="Calculations, decisions, follow-ups" data-c="tf" data-id="${t.id}" data-k="notes">${esc(t.notes||'')}</textarea></div>
 <div class="tb-sec"><div class="tb-h">Files · up to 2 MB each</div>${filesHTML||'<div class="sub">No files attached yet.</div>'}<label class="up">${ic('dl',15)} Attach file<input type="file" hidden data-c="tfile" data-id="${t.id}"></label></div>
 <div class="tb-sec"><div class="tb-h">Shared with</div>${sharesHTML||'<div class="sub">Not shared yet.</div>'}<div class="r2 sh" style="margin-top:8px;flex-wrap:nowrap"><input class="in" placeholder="Person or dept"><select class="in" style="max-width:140px">${['Email','WhatsApp','Google Drive','Slack/Teams','Hardcopy','Other'].map(m=>`<option>${m}</option>`).join('')}</select><button class="btn sm" data-a="ash" data-id="${t.id}">Add</button></div></div>
 </div>
 <div class="tb-foot"><span class="sub">${(t.hist||[]).map(h=>`${fd(h.d)} ${esc(h.s)}`).join(' → ')}</span><button class="btn sm gh" data-a="dt" data-id="${t.id}" style="color:var(--er)">Delete task</button></div></div>`}
+/* ===== Upload icon everywhere, auto-growing notes ===== */
+P.up='M12 16V4M7 9l5-5 5 5M4 20h16';
+function growTA(el){if(!el||el.tagName!=='TEXTAREA')return;el.style.height='auto';el.style.height=Math.max(el.scrollHeight,140)+'px'}
+document.addEventListener('input',e=>{if(e.target&&e.target.tagName==='TEXTAREA')growTA(e.target)});
+function paintExtras(){document.querySelectorAll('#app label.up svg path').forEach(pa=>pa.setAttribute('d',P.up));
+ document.querySelectorAll('#app textarea').forEach(growTA)}
+const _render5=render;render=function(){_render5();paintExtras()};
 document.addEventListener('change',e=>{const c=e.target.dataset.c;c&&C[c]&&C[c](e.target)});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,k=f.dataset.s,v=Object.fromEntries(new FormData(f));
 if(k=='pw'){CL.pw=v.pw;close();CL.next&&CL.next();return}
