@@ -222,6 +222,23 @@ button.kempty{width:100%;background:none;color:var(--ac);font-weight:700;cursor:
 .sheet .g2{gap:8px 10px!important}
 .sheet .r2{margin-top:10px!important}
 @media (max-width:560px){.tf3{grid-template-columns:1fr 1fr}}
+/* ===== Expanded task: roomy sections with proper padding ===== */
+.tb{padding:16px 18px 14px;border-top:1px solid var(--bd);margin:0 -1px -1px}
+.tb-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tb-sec{background:var(--in);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;min-width:0}
+.tb-sec.wide{grid-column:1/-1}
+.tb-h{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin-bottom:10px}
+.tb-row4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tb-row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tb-sec .l{margin-top:0!important}
+.tb .in{padding:9px 11px!important;font-size:14px!important;background:var(--cd)!important}
+.tb textarea.in{min-height:72px}
+.tb-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--bd)}
+.tb-foot .sub{font-size:12px}
+.tb .fl{margin-top:6px}
+.tb .up{margin-top:8px}
+@media(max-width:760px){.tb-grid{grid-template-columns:1fr}.tb-sec.wide{grid-column:auto}}
+@media(max-width:560px){.tb{padding:14px 12px 12px}.tb-row4{grid-template-columns:1fr 1fr}.tb-row2{grid-template-columns:1fr}.tb-sec{padding:12px}}
 </style><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -701,7 +718,7 @@ function paintOT(){if(U.view!=='att'||!U.ar)return;const r=R(U.ar);if(!r)return;
   const pill=document.createElement('i');pill.className='otb';pill.textContent='+'+txt;pill.title='Overtime '+txt+(e.note?' · '+e.note:'');btn.appendChild(pill)})}
 const _render2=render;render=function(){_render2();paintOT()};
 /* ===== Version control: always run the newest build ===== */
-const APP_VER='2026-11-19.8';
+const APP_VER='2026-11-19.9';
 if('serviceWorker' in navigator){let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloaded){reloaded=true;location.reload()}})}
 H.cloud=()=>{if(!CL.u)return;const st=!navigator.onLine?'Offline. Changes are kept on this device and sync automatically when you reconnect.':CL.sync=='saving'?'Saving changes…':CL.sync=='error'?'Sync problem. Changes will retry when the connection returns.':'All changes synced'+(CL.last?' at '+new Date(CL.last).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'')+'.';
  modal(`<h3>Your account</h3><div class="fl" style="margin-top:12px"><span><b>${esc(CL.u.displayName||'Signed in')}</b><br><small style="color:var(--mu)">${esc(CL.u.email||'')}</small></span></div><p class="sub" style="margin:14px 0 4px">${st}</p><p class="sub" style="margin:0 0 6px">Live sync is on. Changes from your other devices appear here automatically.</p><p class="sub" style="margin:0 0 16px;font-size:11px">App version ${APP_VER}</p><div class="r2" style="justify-content:space-between"><button class="btn gh" data-a="mx">Close</button><button class="btn dg" data-a="gso">Sign out</button></div>`)};
@@ -993,6 +1010,26 @@ function taskEditModal(t){modal(`<h3>Edit task</h3><form data-s="tedit" data-id=
 <div><label class="l">Hours (optional)</label><input class="in" type="number" name="hrs" min="0" step="0.25" value="${t.hrs||''}"></div><div><label class="l">Project / site</label><input class="in" name="project" value="${esc(t.project||'')}"></div></div>
 <div class="g2"><div><label class="l">Working link</label><input class="in" name="link" value="${esc(t.link||'')}"></div><div><label class="l">Notes</label><input class="in" name="notes" value="${esc(t.notes||'')}"></div></div>
 <div class="r2" style="justify-content:space-between;margin-top:12px"><button type="button" class="btn dg" data-a="dt" data-id="${t.id}">Delete</button><div class="r2"><button type="button" class="btn gh" data-a="mx">Cancel</button><button class="btn">Save</button></div></div></form>`)}
+/* ===== Expanded task layout: sections ===== */
+function taskBody(t){const shares=t.shares||[],files=t.files||[];
+ const filesHTML=files.map((f,i)=>`<div class="fl"><span>📎 ${esc(f.n)} · ${f.s||''}</span><button class="ic" data-a="df" data-w="t" data-id="${t.id}" data-m="${i}" aria-label="Download">${ic('dl',14)}</button><button class="ic" data-a="rf" data-w="t" data-id="${t.id}" data-m="${i}" aria-label="Remove">${ic('x',14)}</button></div>`).join('');
+ const sharesHTML=shares.map((x,i)=>`<div class="fl"><span>${fd(x.d)} · <b>${esc(x.who)}</b> via ${esc(x.med)}</span><button class="ic" data-a="rsh" data-id="${t.id}" data-m="${i}" aria-label="Remove">${ic('x',14)}</button></div>`).join('');
+ return `<div class="tb"><div class="tb-grid">
+<div class="tb-sec wide"><div class="tb-h">Schedule</div><div class="tb-row4">
+<div><label class="l">Target completion</label><input class="in" type="date" value="${t.due||''}" data-c="tdue" data-id="${t.id}"></div>
+<div><label class="l">Work date</label><input class="in" type="date" value="${t.date||''}" data-c="tf" data-id="${t.id}" data-k="date"></div>
+<div><label class="l">Hours</label><input class="in" type="number" min="0" step="0.25" value="${t.hrs||''}" placeholder="optional" data-c="tf" data-id="${t.id}" data-k="hrs"></div>
+<div><label class="l">Status</label><select class="in" data-c="tst" data-id="${t.id}">${ST.map(x=>`<option ${t.status==x?'selected':''}>${x}</option>`).join('')}</select></div>
+</div></div>
+<div class="tb-sec"><div class="tb-h">Details</div>
+<label class="l">Project / site</label><input class="in" value="${esc(t.project||'')}" data-c="tf" data-id="${t.id}" data-k="project">
+<label class="l">Working link</label><div class="r2" style="flex-wrap:nowrap"><input class="in" value="${esc(t.link||'')}" placeholder="https://drive.google.com/…" data-c="tf" data-id="${t.id}" data-k="link">${t.link?`<a class="ic" href="${esc(t.link)}" target="_blank" rel="noreferrer" aria-label="Open link">${ic('ext',16)}</a>`:''}</div>
+</div>
+<div class="tb-sec"><div class="tb-h">Notes</div><textarea class="in" rows="4" placeholder="Calculations, decisions, follow-ups" data-c="tf" data-id="${t.id}" data-k="notes">${esc(t.notes||'')}</textarea></div>
+<div class="tb-sec"><div class="tb-h">Files · up to 2 MB each</div>${filesHTML||'<div class="sub">No files attached yet.</div>'}<label class="up">${ic('dl',15)} Attach file<input type="file" hidden data-c="tfile" data-id="${t.id}"></label></div>
+<div class="tb-sec"><div class="tb-h">Shared with</div>${sharesHTML||'<div class="sub">Not shared yet.</div>'}<div class="r2 sh" style="margin-top:8px;flex-wrap:nowrap"><input class="in" placeholder="Person or dept"><select class="in" style="max-width:140px">${['Email','WhatsApp','Google Drive','Slack/Teams','Hardcopy','Other'].map(m=>`<option>${m}</option>`).join('')}</select><button class="btn sm" data-a="ash" data-id="${t.id}">Add</button></div></div>
+</div>
+<div class="tb-foot"><span class="sub">${(t.hist||[]).map(h=>`${fd(h.d)} ${esc(h.s)}`).join(' → ')}</span><button class="btn sm gh" data-a="dt" data-id="${t.id}" style="color:var(--er)">Delete task</button></div></div>`}
 document.addEventListener('change',e=>{const c=e.target.dataset.c;c&&C[c]&&C[c](e.target)});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,k=f.dataset.s,v=Object.fromEntries(new FormData(f));
 if(k=='pw'){CL.pw=v.pw;close();CL.next&&CL.next();return}
