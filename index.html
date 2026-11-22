@@ -329,6 +329,8 @@ button.kempty{width:100%;background:none;color:var(--ac);font-weight:700;cursor:
 .lzpage .lz{flex:1;justify-content:center}
 .lzpage .lz-radar{width:min(340px,78vw)}
 .lz-found{width:100%;padding:14px;font-size:16px;border-radius:16px}
+/* ===== Device Finder: signal-only, shows last heard signal ===== */
+.fdr-last{display:inline-flex;align-items:center;gap:6px;background:var(--in);border:1px solid var(--bd);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--mu);margin-top:8px}
 </style><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -808,7 +810,7 @@ function paintOT(){if(U.view!=='att'||!U.ar)return;const r=R(U.ar);if(!r)return;
   const pill=document.createElement('i');pill.className='otb';pill.textContent='+'+txt;pill.title='Overtime '+txt+(e.note?' · '+e.note:'');btn.appendChild(pill)})}
 const _render2=render;render=function(){_render2();paintOT()};
 /* ===== Version control: always run the newest build ===== */
-const APP_VER='2026-11-20.7';
+const APP_VER='2026-11-20.8';
 if('serviceWorker' in navigator){let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloaded){reloaded=true;location.reload()}})}
 H.cloud=()=>{if(!CL.u)return;const st=!navigator.onLine?'Offline. Changes are kept on this device and sync automatically when you reconnect.':CL.sync=='saving'?'Saving changes…':CL.sync=='error'?'Sync problem. Changes will retry when the connection returns.':'All changes synced'+(CL.last?' at '+new Date(CL.last).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'')+'.';
  modal(`<h3>Your account</h3><div class="fl" style="margin-top:12px"><span><b>${esc(CL.u.displayName||'Signed in')}</b><br><small style="color:var(--mu)">${esc(CL.u.email||'')}</small></span></div><p class="sub" style="margin:14px 0 4px">${st}</p><p class="sub" style="margin:0 0 6px">Live sync is on. Changes from your other devices appear here automatically.</p><p class="sub" style="margin:0 0 16px;font-size:11px">App version ${APP_VER}</p><div class="r2" style="justify-content:space-between"><button class="btn gh" data-a="mx">Close</button><button class="btn dg" data-a="gso">Sign out</button></div>`)};
@@ -1241,6 +1243,7 @@ function locStop(){if(!LOC)return;const L=LOC;LOC=null;
  try{L.dev.removeEventListener('advertisementreceived',L.onAd)}catch(e){}
  try{window.removeEventListener(L.orEvt,L.onOr)}catch(e){}
  clearInterval(L.tick);clearTimeout(L.beepT);clearTimeout(L.cmpT);
+ try{L.r.seen=new Date().toISOString();save()}catch(e){}
  try{L.ctx&&L.ctx.close()}catch(e){}}
 function locUI(r){return `<h3>Locating ${esc(r.name)}</h3>
 <div class="lz" style="margin-top:8px">
@@ -1294,6 +1297,7 @@ H.btlocate=async t=>{const r=DEV().find(x=>x.id===t.dataset.id);if(!r||!BT_OK)re
  LOC={dev:d,r,ctx,ac:new AbortController(),orEvt,ema:null,prev:null,prevT:0,lastAd:0,heading:null,hasCompass:false,sec:Array.from({length:LZ_NS},()=>({sum:0,n:0})),mute:false,zone:'none',tick:null,beepT:null,cmpT:null};
  LOC.onAd=e=>{const rs=e.rssi;if(rs==null||!LOC)return;LOC.lastAd=Date.now();
   LOC.ema=LOC.ema==null?rs:LOC.ema*0.7+rs*0.3;
+  LOC.r.lastRssi=Math.round(LOC.ema);LOC.r.lastHeard=new Date().toISOString();
   if(LOC.heading!=null){const b=LOC.sec[lzSector(LOC.heading)];b.sum+=rs;b.n++}
   const z=zoneOf(LOC.ema).k;if(z!==LOC.zone){const up=LZ_RANK[z]>LZ_RANK[LOC.zone];LOC.zone=z;if(up)lzChime(z)}};
  LOC.onOr=e=>{if(!LOC)return;let h=null;
@@ -1357,6 +1361,18 @@ function paintFinder(){
  const w=document.querySelector('.wrap');
  if(w&&on)w.innerHTML=U.view==='locate'?locateV():finderV();
 }
+/* ===== Device Finder: signal-only search (no location fields) ===== */
+function btDeviceRow(r){const seen=r.seen?new Date(r.seen):null,heard=r.lastHeard?new Date(r.lastHeard):null;
+ const fmtT=d=>d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+ return `<div class="fdr-card"><div style="display:flex;gap:12px;align-items:center;min-width:0"><div class="fdr-ico">${ic('bt',20)}</div><div style="min-width:0"><b style="font-size:16px">${esc(r.name)}</b><div class="sub" style="font-size:12px;margin-top:2px">${seen?'Last checked '+fmtT(seen):'Not checked yet'} · added ${fd(r.added)}</div></div></div>
+${r.lastRssi!=null&&heard?`<div class="fdr-last">${ic('bt',13)} Last heard ${r.lastRssi} dBm · ${fmtT(heard)}</div>`:''}
+<div style="margin-top:14px"><label class="l" style="margin-top:0">Note (optional)</label><input class="in" value="${esc(r.note||'')}" placeholder="Serial number, owner, charge status" data-c="btf" data-id="${r.id}" data-k="note"></div>
+<div class="r2" style="justify-content:space-between;margin-top:14px"><button class="fdr-find" data-a="btlocate" data-id="${r.id}" ${BT_OK?'':'disabled'}>${ic('bt',16)} Find by signal</button><button class="btn sm gh" data-a="btdel" data-id="${r.id}" style="color:var(--er)">Remove</button></div></div>`}
+function finderV(){const L=DEV();
+ return `<div class="fdr-head"><div><div class="sub">Find a device you have misplaced</div><h2 style="margin:2px 0 0;font-size:22px">My devices</h2></div><button class="btn" data-a="btscan" ${BT_OK?'':'disabled'}>${ic('plus',16)} Add device</button></div>
+${BT_OK?'':'<div class="bt-warn">Bluetooth is not available in this browser. Use Chrome or Edge on Android, Windows, Mac or ChromeOS.</div>'}
+<div class="sub" style="margin:6px 0 16px">Tap <b>Find by signal</b>, then walk around. The app beeps faster, changes colour and points the way as the Bluetooth signal gets stronger. The device must be switched on and nearby.</div>
+${L.length?`<div class="fdr-grid">${L.map(btDeviceRow).join('')}</div>`:`<div class="fdr-empty"><div class="fdr-orb">${ic('bt',34)}</div><b>No devices yet</b><p class="sub" style="margin-top:6px">Tap Add device, pick your earbuds, watch or tracker from the list, and it will appear here.</p></div>`}`}
 document.addEventListener('change',e=>{const c=e.target.dataset.c;c&&C[c]&&C[c](e.target)});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,k=f.dataset.s,v=Object.fromEntries(new FormData(f));
 if(k=='pw'){CL.pw=v.pw;close();CL.next&&CL.next();return}
