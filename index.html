@@ -357,6 +357,11 @@ button.kempty{width:100%;background:none;color:var(--ac);font-weight:700;cursor:
 /* ===== Job stages: auto-progress and lock-after-save ===== */
 .sp .in:disabled{opacity:.85;cursor:not-allowed;background:var(--cd)}
 .sp-lock{font-size:11px}
+/* ===== Calendar day notes: press and hold a date ===== */
+.ad{position:relative;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.ad .ndot{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:#ec4899;box-shadow:0 0 0 2px var(--cd)}
+.att-tools{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.att-tools .sub{font-size:12px}
 </style><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -836,7 +841,7 @@ function paintOT(){if(U.view!=='att'||!U.ar)return;const r=R(U.ar);if(!r)return;
   const pill=document.createElement('i');pill.className='otb';pill.textContent='+'+txt;pill.title='Overtime '+txt+(e.note?' · '+e.note:'');btn.appendChild(pill)})}
 const _render2=render;render=function(){_render2();paintOT()};
 /* ===== Version control: always run the newest build ===== */
-const APP_VER='2026-11-24.1';
+const APP_VER='2026-11-24.2';
 if('serviceWorker' in navigator){let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!reloaded){reloaded=true;location.reload()}})}
 H.cloud=()=>{if(!CL.u)return;const st=!navigator.onLine?'Offline. Changes are kept on this device and sync automatically when you reconnect.':CL.sync=='saving'?'Saving changes…':CL.sync=='error'?'Sync problem. Changes will retry when the connection returns.':'All changes synced'+(CL.last?' at '+new Date(CL.last).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'')+'.';
  modal(`<h3>Your account</h3><div class="fl" style="margin-top:12px"><span><b>${esc(CL.u.displayName||'Signed in')}</b><br><small style="color:var(--mu)">${esc(CL.u.email||'')}</small></span></div><p class="sub" style="margin:14px 0 4px">${st}</p><p class="sub" style="margin:0 0 6px">Live sync is on. Changes from your other devices appear here automatically.</p><p class="sub" style="margin:0 0 16px;font-size:11px">App version ${APP_VER}</p><div class="r2" style="justify-content:space-between"><button class="btn gh" data-a="mx">Close</button><button class="btn dg" data-a="gso">Sign out</button></div>`)};
@@ -1706,6 +1711,39 @@ H.gsi=async t=>{
  CL.err='';CL.boot=true;render();
  try{await nativeGoogleSignIn()}catch(e){CL.boot=false;CL.err=(e&&e.message)||'Sign-in failed';render()}
 };
+/* ===== Calendar day notes (press and hold a date) and monthly attendance export ===== */
+let _lpT=null,_lpFired=false,_lpX=0,_lpY=0;
+document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest('#app .ad[data-d]'))e.preventDefault()});
+document.addEventListener('pointerdown',e=>{const c=e.target.closest&&e.target.closest('#app .ad[data-d]');if(!c)return;
+ _lpFired=false;_lpX=e.clientX;_lpY=e.clientY;clearTimeout(_lpT);
+ _lpT=setTimeout(()=>{_lpT=null;_lpFired=true;try{navigator.vibrate&&navigator.vibrate(25)}catch(x){}openNote(c.dataset.id,c.dataset.d)},450)});
+document.addEventListener('pointermove',e=>{if(_lpT&&Math.hypot(e.clientX-_lpX,e.clientY-_lpY)>10){clearTimeout(_lpT);_lpT=null}});
+['pointerup','pointercancel','pointerleave'].forEach(ev=>document.addEventListener(ev,()=>{clearTimeout(_lpT);_lpT=null}));
+document.addEventListener('click',e=>{if(_lpFired&&e.target.closest&&e.target.closest('#app .ad[data-d]')){e.stopPropagation();e.preventDefault();_lpFired=false}},true);
+function openNote(id,ds){const r=R(id);if(!r)return;const cur=((AT(r).notes||{})[ds])||'';
+ modal(`<h3>Note · ${fd(ds)}</h3><p class="sub" style="margin-bottom:10px">${esc(r.org)} · ${esc(r.title)}</p>
+<textarea id="nt-text" class="in" rows="5" placeholder="Site visit, leave reason, handover, reminder…">${esc(cur)}</textarea>
+<div class="r2" style="justify-content:space-between;margin-top:14px"><button class="btn sm gh" style="color:var(--er)" data-a="ndel" data-id="${id}" data-d="${ds}" ${cur?'':'disabled'}>Delete note</button>
+<div class="r2"><button class="btn gh" data-a="mx">Cancel</button><button class="btn" data-a="nsave" data-id="${id}" data-d="${ds}">Save note</button></div></div>`);
+ setTimeout(()=>{const t=document.getElementById('nt-text');if(t)t.focus()},50)}
+H.nsave=t=>{const r=R(t.dataset.id);if(!r)return;const txt=((document.getElementById('nt-text')||{}).value||'').trim();
+ const a=AT(r);a.notes=a.notes||{};if(txt)a.notes[t.dataset.d]=txt;else delete a.notes[t.dataset.d];
+ save();close();render();toast(txt?'Note saved':'Note removed')};
+H.ndel=t=>{const r=R(t.dataset.id);if(!r)return;const a=AT(r);delete (a.notes||{})[t.dataset.d];save();close();render();toast('Note deleted')};
+function paintNotes(){if(U.view!=='att'||!U.ar)return;const r=R(U.ar);if(!r)return;const n=AT(r).notes||{};
+ document.querySelectorAll('#app .ad[data-d]').forEach(btn=>{btn.removeAttribute('disabled');
+  if(n[btn.dataset.d]){const dot=document.createElement('i');dot.className='ndot';dot.title='Has a note';btn.appendChild(dot)}})}
+const _render9=render;render=function(){_render9();paintNotes()};
+function attExportBar(){return `<div class="att-tools"><span class="sub">Press and hold a date to add or edit a note. Pink dot = note saved.</span><button class="btn sm gh" data-a="attcsv">Export month (CSV)</button></div>`}
+const _attV3=attV;attV=function(){return _attV3()+attExportBar()};
+H.attcsv=()=>{const r=R(U.ar);if(!r)return;const ym=U.am,a=AT(r),n=dim(ym),q=v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`;
+ const lab={P:'Present',H:'Half day',A:'Absent',L:'Paid leave',HD:'Holiday',U:'Unpaid leave'};
+ const rows=[['Date','Day','Status','Overtime hours','Note']];
+ for(let d=1;d<=n;d++){const ds=ym+'-'+String(d).padStart(2,'0');const st=a.days[ds]||'';const ot=(a.ot||[]).find(x=>x.date===ds);
+  rows.push([ds,ATW[new Date(ds+'T00:00').getDay()],st?lab[st]:(dayOff(ds)?'Weekly off':''),ot?ot.hours:'',(a.notes||{})[ds]||''])}
+ const c=monthStats(r,ym);rows.push([]);
+ rows.push(['Summary','',`Present ${c.cnt.P} · Half ${c.cnt.H} · Absent ${c.cnt.A} · Leave/holiday ${c.cnt.L+c.cnt.HD}`,'','']);
+ save2(`attendance-${String(r.org).replace(/\W+/g,'_')}-${ym}.csv`,rows.map(x=>x.map(q).join(',')).join('\n'))};
 document.addEventListener('change',e=>{const c=e.target.dataset.c;c&&C[c]&&C[c](e.target)});
 document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,k=f.dataset.s,v=Object.fromEntries(new FormData(f));
 if(k=='pw'){CL.pw=v.pw;close();CL.next&&CL.next();return}
